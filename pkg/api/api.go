@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
@@ -31,8 +30,6 @@ type handlerBuilder func(r *gin.RouterGroup)
 func (a *API) setupRouter(apiHandlers ...handlerBuilder) *gin.Engine {
 	r := gin.New()
 
-	setRedirections(r)
-
 	r.NoRoute(func(c *gin.Context) {
 		c.AbortWithStatus(404)
 	})
@@ -60,18 +57,7 @@ func (a *API) setupRouter(apiHandlers ...handlerBuilder) *gin.Engine {
 
 func (a *API) buildStatAPI() handlerBuilder {
 	return func(r *gin.RouterGroup) {
-		r.GET("/patients/number", a.Stat.PatientsCount)
-		r.GET("/documents/number", a.Stat.DocumentsCount)
+		r.GET("", a.Stat.GetTotal)
+		r.GET("/:period", a.Stat.GetStat)
 	}
-}
-
-func setRedirections(r *gin.Engine) *gin.Engine {
-	redirect := func(c *gin.Context) {
-		c.Redirect(http.StatusSeeOther, "v1/")
-	}
-
-	r.GET("/", redirect)
-	r.HEAD("/", redirect)
-
-	return r
 }

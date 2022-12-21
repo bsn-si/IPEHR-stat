@@ -17,7 +17,7 @@ func NewService(db *localDB.DB) *Service {
 }
 
 func (s *Service) GetPatientsCount(period string) (uint64, error) {
-	start, end := resolvPeriod(period)
+	start, end := ResolvPeriod(period)
 
 	count, err := s.db.StatPatientsCountGet(start, end)
 	if err != nil {
@@ -28,7 +28,7 @@ func (s *Service) GetPatientsCount(period string) (uint64, error) {
 }
 
 func (s *Service) GetDocumentsCount(period string) (uint64, error) {
-	start, end := resolvPeriod(period)
+	start, end := ResolvPeriod(period)
 
 	count, err := s.db.StatDocumentsCountGet(start, end)
 	if err != nil {
@@ -38,7 +38,7 @@ func (s *Service) GetDocumentsCount(period string) (uint64, error) {
 	return count, nil
 }
 
-func resolvPeriod(period string) (int64, int64) {
+func ResolvPeriod(period string) (int64, int64) {
 	if period == "" {
 		return 0, 32503662000
 	}
