@@ -4,10 +4,27 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"ipehr/stat/pkg/config"
 	"ipehr/stat/pkg/infrastructure"
 )
+
+// @title        IPEHR Stat API
+// @version      0.1
+// @description  IPEHR Stat is an open API service for providing public statistics from the IPEHR system.
+
+// @contact.name   API Support
+// @contact.url    https://bsn.si/blockchain
+// @contact.email  support@bsn.si
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      stat.ipehr.org
+// host      localhost:8080
+// @BasePath  /
 
 type API struct {
 	Stat *StatHandler
@@ -51,6 +68,8 @@ func (a *API) setupRouter(apiHandlers ...handlerBuilder) *gin.Engine {
 	for _, b := range apiHandlers {
 		b(statGroup)
 	}
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return r
 }

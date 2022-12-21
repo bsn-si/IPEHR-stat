@@ -1,9 +1,14 @@
 package main
 
+// Generating swagger doc spec//
+//go:generate swag fmt -g ../pkg/api/api.go
+//go:generate swag init --parseDependency -g ../cmd/main.go -o ../pkg/api/docs
+
 import (
 	"flag"
 
 	"ipehr/stat/pkg/api"
+	_ "ipehr/stat/pkg/api/docs"
 	"ipehr/stat/pkg/config"
 	"ipehr/stat/pkg/infrastructure"
 	"ipehr/stat/pkg/service/syncer"
