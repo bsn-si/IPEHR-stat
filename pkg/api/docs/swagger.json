@@ -1,0 +1,97 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/": {
+            "get": {
+                "description": "Retrieve the IPEHR statistics total and current month",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get IPEHR statistics total",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.ResponseTotal"
+                        }
+                    },
+                    "500": {
+                        "description": "Is returned when an unexpected error occurs while processing a request"
+                    }
+                }
+            }
+        },
+        "/{period}": {
+            "get": {
+                "description": "Retrieve the IPEHR statistics per month",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get IPEHR statistics per month",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Month in YYYYYMM format. Example: 202201",
+                        "name": "period",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.ResponsePeriod"
+                        }
+                    },
+                    "500": {
+                        "description": "Is returned when an unexpected error occurs while processing a request"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.ResponsePeriod": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.Stat"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.ResponseTotal": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.Stat"
+                },
+                "month": {
+                    "$ref": "#/definitions/api.Stat"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.Stat": {
+            "type": "object",
+            "properties": {
+                "documents": {
+                    "type": "integer"
+                },
+                "patients": {
+                    "type": "integer"
+                },
+                "time": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}
