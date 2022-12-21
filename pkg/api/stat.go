@@ -43,6 +43,7 @@ type ResponseTotal struct {
 // GetStatPerMonth
 // @Summary      Get IPEHR statistics per month
 // @Description  Retrieve the IPEHR statistics per month
+// @Tags         Stat
 // @Produce      json
 // @Param        period  path      string  false  "Month in YYYYYMM format. Example: 202201"
 // @Success      200     {object}  ResponsePeriod
@@ -84,6 +85,7 @@ func (h *StatHandler) GetStat(c *gin.Context) {
 // GetStat
 // @Summary      Get IPEHR statistics total
 // @Description  Retrieve the IPEHR statistics total and current month
+// @Tags         Stat
 // @Produce      json
 // @Success      200     {object}  ResponseTotal
 // @Failure      500     "Is returned when an unexpected error occurs while processing a request"

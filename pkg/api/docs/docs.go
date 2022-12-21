@@ -10,7 +10,15 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "contact": {
+            "name": "API Support",
+            "url": "https://bsn.si/blockchain",
+            "email": "support@bsn.si"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -21,6 +29,9 @@ const docTemplate = `{
                 "description": "Retrieve the IPEHR statistics total and current month",
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Stat"
                 ],
                 "summary": "Get IPEHR statistics total",
                 "responses": {
@@ -41,6 +52,9 @@ const docTemplate = `{
                 "description": "Retrieve the IPEHR statistics per month",
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Stat"
                 ],
                 "summary": "Get IPEHR statistics per month",
                 "parameters": [
@@ -110,12 +124,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "0.1",
+	Host:             "stat.ipehr.org",
+	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "IPEHR Stat API",
+	Description:      "IPEHR Stat is an open API service for providing public statistics from the IPEHR system.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

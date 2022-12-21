@@ -1,3 +1,4 @@
+basePath: /
 definitions:
   api.ResponsePeriod:
     properties:
@@ -24,8 +25,19 @@ definitions:
       time:
         type: integer
     type: object
+host: stat.ipehr.org
 info:
-  contact: {}
+  contact:
+    email: support@bsn.si
+    name: API Support
+    url: https://bsn.si/blockchain
+  description: IPEHR Stat is an open API service for providing public statistics from
+    the IPEHR system.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: IPEHR Stat API
+  version: "0.1"
 paths:
   /:
     get:
@@ -41,6 +53,8 @@ paths:
           description: Is returned when an unexpected error occurs while processing
             a request
       summary: Get IPEHR statistics total
+      tags:
+      - Stat
   /{period}:
     get:
       description: Retrieve the IPEHR statistics per month
@@ -60,4 +74,6 @@ paths:
           description: Is returned when an unexpected error occurs while processing
             a request
       summary: Get IPEHR statistics per month
+      tags:
+      - Stat
 swagger: "2.0"
