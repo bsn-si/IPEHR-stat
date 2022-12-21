@@ -11,21 +11,6 @@ import (
 	"ipehr/stat/pkg/infrastructure"
 )
 
-// @title        IPEHR Stat API
-// @version      0.1
-// @description  IPEHR Stat is an open API service for providing public statistics from the IPEHR system.
-
-// @contact.name   API Support
-// @contact.url    https://bsn.si/blockchain
-// @contact.email  support@bsn.si
-
-// @license.name  Apache 2.0
-// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host      stat.ipehr.org
-// host      localhost:8080
-// @BasePath  /
-
 type API struct {
 	Stat *StatHandler
 }

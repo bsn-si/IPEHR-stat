@@ -1,14 +1,30 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "IPEHR Stat is an open API service for providing public statistics from the IPEHR system.",
+        "title": "IPEHR Stat API",
+        "contact": {
+            "name": "API Support",
+            "url": "https://bsn.si/blockchain",
+            "email": "support@bsn.si"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "0.1"
     },
+    "host": "stat.ipehr.org",
+    "basePath": "/",
     "paths": {
         "/": {
             "get": {
                 "description": "Retrieve the IPEHR statistics total and current month",
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Stat"
                 ],
                 "summary": "Get IPEHR statistics total",
                 "responses": {
@@ -29,6 +45,9 @@
                 "description": "Retrieve the IPEHR statistics per month",
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Stat"
                 ],
                 "summary": "Get IPEHR statistics per month",
                 "parameters": [
