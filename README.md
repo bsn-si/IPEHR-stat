@@ -37,7 +37,8 @@ go build -o ./bin/ipehr-stat cmd/main.go
 
 ### Change config parameters
 
-Write your settings in `config.json`. It can be based on `config.json.example`
+Write your settings in `config.json`. It can be based on `config.json.example`.
+The actual addresses of the downloaded contracts can be found [here](https://github.com/bsn-si/IPEHR-blockchain-indexes/blob/develop/deploys.md).
 
 ### Run IPEHR-stat
 
