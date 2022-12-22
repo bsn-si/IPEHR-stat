@@ -1,6 +1,6 @@
 # IPEHR-stat
 
-This repository contains a service for providing public statistical data collected and processed from the IPEHR system. 
+This repository contains a service for making public statistical data available that can be collected and processed in the IPEHR system.
 The service implements an open API with specified metrics.
 The data is collected and processed by accessing [IPEHR-blockchain-indexes](https://github.com/bsn-si/IPEHR-blockchain-indexes) smart contracts.
 
