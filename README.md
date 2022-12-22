@@ -2,7 +2,7 @@
 
 This repository contains a service for providing public statistical data collected and processed from the IPEHR system. 
 The service implements an open API with specified metrics.
-The data is collected and processed by accessing [IPEHR-blockchain-indexes] smart contracts (https://github.com/bsn-si/IPEHR-blockchain-indexes).
+The data is collected and processed by accessing [IPEHR-blockchain-indexes](https://github.com/bsn-si/IPEHR-blockchain-indexes) smart contracts.
 
 Medical statistics can be collected by the service through:
 - transaction analysis of contracts [IPEHR-blockchain-indexes](https://github.com/bsn-si/IPEHR-blockchain-indexes)
@@ -12,8 +12,8 @@ Medical statistics can be collected by the service through:
 For demonstration purposes, the following metrics are implemented:
 - number of patients registered in the system over all time
 - number of patients logged in the system for a specified month
-- nb of EHR documents logged in the system for all time
-- EHR sign-in count for a given month
+- number of EHR documents registered in the system for all time
+- number of EHR documents registered in the system for a given month
 
 API Documentation: [https://stat.ipehr.org/swagger/index.html](https://stat.ipehr.org/swagger/index.html)
 
