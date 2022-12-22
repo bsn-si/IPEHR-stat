@@ -1,0 +1,46 @@
+{
+  "node": {
+    // Ethereum node rpc
+    "url": "wss://goerli.infura.io/ws/v3/<KEY>"
+  },
+  "account": {
+    // Non required option: file name of account json, by default Account.json   
+    "file": "Account.json",
+    // Password for account
+    "password": ""
+  },
+  "chainlink": {
+    // address of root chainlink node user, need for: chainlink:fill, oracle:publish, oracle:grant
+    "address": "",
+    "token": {
+      // Link token address
+      // Goerli: "0x326C977E6efc84E512bB9C30f76E30c160eD06FB",
+      "address": "0x326C977E6efc84E512bB9C30f76E30c160eD06FB"
+    },
+    "oracle": {
+      // Main oracle contract address
+      // Aka `@chainlink/Operator.sol`
+      "address": ""
+    },
+  },
+  "contracts": {
+    "directConsumer": {
+      // Contract address
+      "address": "",
+      // Core url host when oracle request data
+      "apiHost": "https://stat.ipehr.org",
+      // Job id in chainlink 
+      "jobId": ""
+    },
+    "statistics": {
+      // Address of example contract for call stats
+      "consumerAddress": "",
+      // Address of storage contract that updates by chainlink
+      "storageAddress": ""
+    }
+  },
+  "amount": {
+    "link": "50.0",
+    "eth": "5.0"
+  }
+}
