@@ -18,4 +18,4 @@ npm run build
 After that you can found all json in `artifacts/contracts` folder.
 
 ### Publish/Usage
-You can check [helper scripts](scripts/README.md) with guide how to deploy all contracts & config jobs in chainlink.
+You can check [helper scripts](../scripts/README.md) with guide how to deploy all contracts & config jobs in chainlink.
