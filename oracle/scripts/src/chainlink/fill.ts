@@ -1,19 +1,15 @@
 import * as ethers from "ethers"
 
-import {
-  getProviderWithAccountSigner,
-  getLinkTokenContract,
-  config,
-} from "../utils"
+import { getProviderWithAccountSigner, getLinkTokenContract, config } from "../utils"
 
-async function main() {  
+async function main() {
   const { provider, signer } = await getProviderWithAccountSigner()
 
   const contract = getLinkTokenContract(signer, config.chainlink.token.address)
   console.log("Transfer funds & link tokens to chainlink: ", config.chainlink.token.address)
 
   const transferTx = await signer.sendTransaction({
-    value: ethers.utils.parseEther(config.ETH_AMOUNT),
+    value: ethers.utils.parseEther(config.amount.eth),
     to: config.chainlink.address,
   })
 
@@ -31,7 +27,7 @@ async function main() {
 
   const transferTokensTx = await contract.transfer(
     config.chainlink.address,
-    ethers.utils.parseUnits(config.LINK_AMOUNT),
+    ethers.utils.parseUnits(config.amount.link),
   )
 
   console.log("Transfer tokens transaction sended, wait confirmations...")

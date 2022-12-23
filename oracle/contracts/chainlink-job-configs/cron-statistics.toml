@@ -1,6 +1,7 @@
 type = "cron"
 
 name = "IPEHR Cron Statistics"
+externalJobID = "a64bfcb9-c559-4d85-9fbe-e1f9c7f6a8a4"
 schedule = "@every 2m"
 maxTaskDuration = "0s"
 schemaVersion = 1

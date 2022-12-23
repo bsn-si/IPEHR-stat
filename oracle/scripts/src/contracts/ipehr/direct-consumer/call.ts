@@ -9,7 +9,7 @@ async function main() {
   log.title("Connect to node & get signer")
   const { signer } = await getProviderWithAccountSigner()
   await log.signer(signer)
-  
+
   const contract = getDirectConsumerContract(signer, config.contracts.directConsumer.address)
   log.title(`Show current data from direct consumer "${contract.address}", wait results...`)
 

@@ -22,8 +22,7 @@
     "cron-statistics-consumer:call": "ts-node ./src/contracts/ipehr/cron-statistics-consumer/call.ts",
     "style:fix": "prettier --config .prettierrc.js 'src/**/*.{ts,tsx}' --write",
     "lint:fix": "eslint '*/**/*.{ts,tsx}' --quiet --fix",
-    "fix:all": "npm run style:fix && npm run lint:fix",
-    "start": "ts-node ./src/main.ts"
+    "fix:all": "npm run style:fix && npm run lint:fix"
   },
   "dependencies": {
     "@types/yargs": "^17.0.17",

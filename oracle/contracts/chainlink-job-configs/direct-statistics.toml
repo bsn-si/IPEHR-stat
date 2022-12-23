@@ -1,6 +1,7 @@
 type = "directrequest"
 schemaVersion = 1
 name = "IPEHR Statistics via Direct Request"
+externalJobID   = "a72095b3-4faa-4722-8aeb-01ae80b1355a"
 contractAddress = "OPERATOR_CONTRACT_ADDRESS"
 maxTaskDuration = "0s"
 observationSource = """
