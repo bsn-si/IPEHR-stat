@@ -48,6 +48,8 @@ The actual addresses of deployed contracts can be found [here](https://github.co
 
 ## Usage examples
 
+Direct consumer delivery:
 [![video-m5-1](https://user-images.githubusercontent.com/98888366/209851585-3ecf965f-0f71-49fe-a35e-25b4e3641c8b.png)](https://media.bsn.si/ipehr/video-m5-1.mp4)
 
+Scheduled delivery:
 [![video-m5-2](https://user-images.githubusercontent.com/98888366/209851873-ffe97a94-bc75-43fe-baa2-eba73a36744c.png)](https://media.bsn.si/ipehr/video-m5-2.mp4)
