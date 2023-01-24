@@ -7,11 +7,11 @@ package main
 import (
 	"flag"
 
-	"ipehr/stat/pkg/api"
-	_ "ipehr/stat/pkg/api/docs"
-	"ipehr/stat/pkg/config"
-	"ipehr/stat/pkg/infrastructure"
-	"ipehr/stat/pkg/service/syncer"
+	"github.com/bsn-si/IPEHR-stat/pkg/api"
+	_ "github.com/bsn-si/IPEHR-stat/pkg/api/docs"
+	"github.com/bsn-si/IPEHR-stat/pkg/config"
+	"github.com/bsn-si/IPEHR-stat/pkg/infrastructure"
+	"github.com/bsn-si/IPEHR-stat/pkg/service/syncer"
 
 	"github.com/gin-contrib/cors"
 )

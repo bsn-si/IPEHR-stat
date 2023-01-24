@@ -5,8 +5,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	"ipehr/stat/pkg/config"
-	"ipehr/stat/pkg/localDB"
+	"github.com/bsn-si/IPEHR-stat/pkg/config"
+	"github.com/bsn-si/IPEHR-stat/pkg/localDB"
 )
 
 type Infra struct {

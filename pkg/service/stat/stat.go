@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"ipehr/stat/pkg/localDB"
+	"github.com/bsn-si/IPEHR-stat/pkg/localDB"
 )
 
 type Service struct {

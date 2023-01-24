@@ -1,4 +1,5 @@
-module ipehr/stat
+module github.com/bsn-si/IPEHR-stat
+
 
 go 1.19
 
