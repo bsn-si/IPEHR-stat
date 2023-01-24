@@ -7,8 +7,8 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	"ipehr/stat/pkg/config"
-	"ipehr/stat/pkg/infrastructure"
+	"github.com/bsn-si/IPEHR-stat/pkg/config"
+	"github.com/bsn-si/IPEHR-stat/pkg/infrastructure"
 )
 
 type API struct {

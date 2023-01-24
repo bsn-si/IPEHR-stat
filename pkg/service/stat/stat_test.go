@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"ipehr/stat/pkg/config"
-	"ipehr/stat/pkg/localDB"
+	"github.com/bsn-si/IPEHR-stat/pkg/config"
+	"github.com/bsn-si/IPEHR-stat/pkg/localDB"
 )
 
 var testDBPath = "/tmp/ipehrstat_test.db"

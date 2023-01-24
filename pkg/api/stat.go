@@ -9,8 +9,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ipehr/stat/pkg/localDB"
-	"ipehr/stat/pkg/service/stat"
+	"github.com/bsn-si/IPEHR-stat/pkg/localDB"
+	"github.com/bsn-si/IPEHR-stat/pkg/service/stat"
 )
 
 type StatHandler struct {

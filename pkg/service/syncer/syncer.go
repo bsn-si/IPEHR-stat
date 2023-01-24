@@ -17,7 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	"ipehr/stat/pkg/localDB"
+	"github.com/bsn-si/IPEHR-stat/pkg/localDB"
 )
 
 type Config struct {
