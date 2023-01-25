@@ -3,7 +3,7 @@ module github.com/bsn-si/IPEHR-stat
 go 1.19
 
 require (
-	github.com/bsn-si/IPEHR-gateway/src v0.0.0-20230124142406-073768c73a9c
+	github.com/bsn-si/IPEHR-gateway/src v0.0.0-20230125083651-26f9cd9e0baa
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.1
