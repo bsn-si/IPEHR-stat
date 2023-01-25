@@ -13,6 +13,8 @@ github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20221202181307-76fa05c21b12 h
 github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20221202181307-76fa05c21b12/go.mod h1:pSwJ0fSY5KhvocuWSx4fz3BA8OrA1bQn+K1Eli3BRwM=
 github.com/bsn-si/IPEHR-gateway/src v0.0.0-20230124142406-073768c73a9c h1:MIlG/C/JdTKDG9MwZs0ySZ1U9TEf0GmGtZFhmKn4g34=
 github.com/bsn-si/IPEHR-gateway/src v0.0.0-20230124142406-073768c73a9c/go.mod h1:0IMfD+ydbz3whTHTUC/lhLi2xrEPs2/xd3RlGJuc+S4=
+github.com/bsn-si/IPEHR-gateway/src v0.0.0-20230125083651-26f9cd9e0baa h1:Tw/dtzI/+H6Ix22f9NILqK8/nivkEPLwcmTmlhWmVEo=
+github.com/bsn-si/IPEHR-gateway/src v0.0.0-20230125083651-26f9cd9e0baa/go.mod h1:0IMfD+ydbz3whTHTUC/lhLi2xrEPs2/xd3RlGJuc+S4=
 github.com/btcsuite/btcd v0.22.1 h1:CnwP9LM/M9xuRrGSCGeMVs9iv09uMqwsVX7EeIpgV2c=
 github.com/btcsuite/btcd/btcec/v2 v2.3.1 h1:v8tFffXRNpwFPbeQhkYPrOXOvVrwD5QIe66Jkz3db14=
 github.com/btcsuite/btcd/btcec/v2 v2.3.1/go.mod h1:zYzJ8etWJQIv1Ogk7OzpWjowwOdXY1W/17j2MW85J04=
