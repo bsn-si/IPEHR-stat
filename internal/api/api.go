@@ -7,23 +7,27 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
+	"github.com/bsn-si/IPEHR-stat/internal/api/middleware"
 	"github.com/bsn-si/IPEHR-stat/pkg/config"
 	"github.com/bsn-si/IPEHR-stat/pkg/infrastructure"
 )
 
 type API struct {
-	Stat *StatHandler
+	Stat     *StatHandler
+	queryAPI *aqlQueryAPI
 }
 
 func New(cfg *config.Config, infra *infrastructure.Infra) *API {
 	return &API{
-		Stat: NewStatHandler(infra.DB),
+		Stat:     NewStatHandler(infra.DB),
+		queryAPI: newAQLQueryAPI(nil),
 	}
 }
 
 func (a *API) Build() *gin.Engine {
 	return a.setupRouter(
 		a.buildStatAPI(),
+		a.buildQueryAPI(),
 	)
 }
 
@@ -35,6 +39,8 @@ func (a *API) setupRouter(apiHandlers ...handlerBuilder) *gin.Engine {
 	r.NoRoute(func(c *gin.Context) {
 		c.AbortWithStatus(404)
 	})
+
+	r.Use(middleware.RequestID)
 
 	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		// your custom format
@@ -48,6 +54,7 @@ func (a *API) setupRouter(apiHandlers ...handlerBuilder) *gin.Engine {
 			param.ErrorMessage,
 		)
 	}))
+	r.Use(gin.Recovery())
 
 	statGroup := r.Group("")
 	for _, b := range apiHandlers {
@@ -63,5 +70,13 @@ func (a *API) buildStatAPI() handlerBuilder {
 	return func(r *gin.RouterGroup) {
 		r.GET("", a.Stat.GetTotal)
 		r.GET("/:period", a.Stat.GetStat)
+	}
+}
+
+func (a *API) buildQueryAPI() handlerBuilder {
+	return func(r *gin.RouterGroup) {
+		r = r.Group("query")
+
+		r.POST("/", a.queryAPI.QueryHandler)
 	}
 }
