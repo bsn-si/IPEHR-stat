@@ -5,10 +5,15 @@ package main
 //go:generate swag init --parseDependency -g ../cmd/main.go -o ../pkg/api/docs
 
 import (
+	"context"
 	"flag"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
-	"github.com/bsn-si/IPEHR-stat/pkg/api"
-	_ "github.com/bsn-si/IPEHR-stat/pkg/api/docs"
+	"github.com/bsn-si/IPEHR-stat/internal/api"
 	"github.com/bsn-si/IPEHR-stat/pkg/config"
 	"github.com/bsn-si/IPEHR-stat/pkg/infrastructure"
 	"github.com/bsn-si/IPEHR-stat/pkg/service/syncer"
@@ -41,19 +46,41 @@ func main() {
 	infra := infrastructure.New(cfg)
 	defer infra.Close()
 
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Interrupt)
+	defer cancel()
+
 	syncer.New(
 		infra.DB,
 		infra.EthClient,
 		syncer.Config(cfg.Sync),
-	).Start()
+	).Start(ctx)
 
-	a := api.New(cfg, infra).Build()
+	router := api.New(cfg, infra).Build()
 
 	//TODO complete CORS config
-	a.Use(cors.Default())
+	router.Use(cors.Default())
 
-	err := a.Run(cfg.Host)
-	if err != nil {
-		panic(err)
+	srv := http.Server{
+		Addr:    cfg.Host,
+		Handler: router,
 	}
+
+	go func() {
+		log.Printf("Server start listening on host: %v", srv.Addr)
+		if err := srv.ListenAndServe(); err != nil {
+			log.Fatalf("Listen server error: %v", err)
+		}
+	}()
+
+	<-ctx.Done()
+
+	log.Println("Server shotdowning...")
+	stopCtx, stopCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer stopCancel()
+
+	if err := srv.Shutdown(stopCtx); err != nil {
+		log.Fatalf("Server shotdown error: %v", err)
+	}
+
+	log.Println("Server stopped")
 }

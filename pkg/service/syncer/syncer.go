@@ -95,12 +95,10 @@ func New(db *localDB.DB, ethClient *ethclient.Client, cfg Config) *Syncer {
 	return &s
 }
 
-func (s *Syncer) Start() {
+func (s *Syncer) Start(ctx context.Context) {
 	var bigInt1 = big.NewInt(1)
 
 	log.Printf("[SYNC] Starting sync from block number: %d", s.blockNum)
-
-	ctx := context.Background()
 
 	go func() {
 		for {
