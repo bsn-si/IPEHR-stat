@@ -60,13 +60,14 @@ func main() {
 	//TODO complete CORS config
 	router.Use(cors.Default())
 
-	srv := http.Server{
+	srv := http.Server{ //nolint
 		Addr:    cfg.Host,
 		Handler: router,
 	}
 
 	go func() {
 		log.Printf("Server start listening on host: %v", srv.Addr)
+
 		if err := srv.ListenAndServe(); err != nil {
 			log.Fatalf("Listen server error: %v", err)
 		}
@@ -75,6 +76,7 @@ func main() {
 	<-ctx.Done()
 
 	log.Println("Server shotdowning...")
+
 	stopCtx, stopCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer stopCancel()
 
