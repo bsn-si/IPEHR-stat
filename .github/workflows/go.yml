@@ -21,7 +21,13 @@ jobs:
       - name: Unit Test
         run: |
           go test -v ./...
-      
+   
+  docker:
+    name: docker-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
       - uses: mr-smithers-excellent/docker-build-push@v5
         name: Build & push Docker image
         with:
