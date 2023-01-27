@@ -12,9 +12,6 @@ on:
     types:
       - completed
 
-permissions:
-  contents: read
-
 jobs:
   docker:
     name: docker-build

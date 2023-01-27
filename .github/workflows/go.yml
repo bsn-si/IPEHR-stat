@@ -22,17 +22,17 @@ jobs:
         run: |
           go test -v ./...
    
-  docker:
-    name: docker-build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+  # docker:
+  #   name: docker-build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - uses: mr-smithers-excellent/docker-build-push@v5
-        name: Build & push Docker image
-        with:
-          image: ipehr-stats
-          registry: ghcr.io
-          githubOrg: bsn-si
-          username: ${{ secrets.GHCR_USERNAME }}
-          password: ${{ secrets.GHCR_TOKEN }}
+  #     - uses: mr-smithers-excellent/docker-build-push@v5
+  #       name: Build & push Docker image
+  #       with:
+  #         image: ipehr-stats
+  #         registry: ghcr.io
+  #         githubOrg: bsn-si
+  #         username: ${{ secrets.GHCR_USERNAME }}
+  #         password: ${{ secrets.GHCR_TOKEN }}
