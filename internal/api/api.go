@@ -8,6 +8,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/bsn-si/IPEHR-stat/internal/api/middleware"
+	"github.com/bsn-si/IPEHR-stat/internal/queryexecuter"
 	"github.com/bsn-si/IPEHR-stat/pkg/config"
 	"github.com/bsn-si/IPEHR-stat/pkg/infrastructure"
 )
@@ -20,7 +21,7 @@ type API struct {
 func New(cfg *config.Config, infra *infrastructure.Infra) *API {
 	return &API{
 		Stat:     NewStatHandler(infra.DB),
-		queryAPI: newAQLQueryAPI(nil),
+		queryAPI: newAQLQueryAPI(queryexecuter.NewQueryExecuterService(infra.AqlDB)),
 	}
 }
 
