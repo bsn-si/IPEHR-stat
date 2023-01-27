@@ -1,14 +1,14 @@
 name: docker-build
 on: 
-  label:
-    types:
-      - created
-  push:
-    branches:
-      - main
-      - develop
+  # label:
+  #   types:
+  #     - created
+  # push:
+  #   branches:
+  #     - main
+  #     - develop
   workflow_run:
-    workflows: [Go, golangci-lint]
+    workflows: [Go]
     types:
       - completed
 
