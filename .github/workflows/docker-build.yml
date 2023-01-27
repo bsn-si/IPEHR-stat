@@ -3,14 +3,16 @@ on:
   # label:
   #   types:
   #     - created
-  # push:
-  #   branches:
-  #     - main
-  #     - develop
-  workflow_run:
-    workflows: [Go]
-    types:
-      - completed
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+      - 'hotfix/**'
+  # workflow_run:
+  #   workflows: [Go]
+  #   types:
+  #     - completed
 
 jobs:
   docker:
