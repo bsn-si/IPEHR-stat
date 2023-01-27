@@ -69,7 +69,7 @@ func TestCheckCounting(t *testing.T) {
 func prepare(t *testing.T) *localDB.DB {
 	t.Helper()
 
-	cfgPath := flag.String("config", "./config.json", "config file path")
+	cfgPath := flag.String("config", "./config.json.example", "config file path")
 
 	flag.Parse()
 
