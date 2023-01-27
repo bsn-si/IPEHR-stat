@@ -219,7 +219,7 @@ func (s *Syncer) procMulticall(_abi *abi.ABI, method *abi.Method, inputData []by
 	return nil
 }
 
-func (s *Syncer) procAddEhrDoc(method *abi.Method, inputData []byte, ts time.Time) error {
+func (s *Syncer) procAddEhrDoc(method *abi.Method, inputData []byte, ts time.Time) error { //nolint
 	log.Println("[STAT] new EHR document registered")
 
 	err := s.db.StatDocumentsCountIncrement(ts)
@@ -240,7 +240,7 @@ func (s *Syncer) procUserNew(method *abi.Method, inputData []byte, ts time.Time)
 
 	// interface: function userNew(address addr, bytes32 IDHash, Role role, Attributes.Attribute[] calldata attrs, address signer, bytes calldata signature)
 	if len(args) < 3 {
-		return fmt.Errorf("args length < 3")
+		return fmt.Errorf("args length(%d) < 3", len(args)) //nolint
 	}
 
 	role := args[2].(uint8)

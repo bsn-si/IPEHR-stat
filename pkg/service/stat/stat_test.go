@@ -19,7 +19,7 @@ func TestCheckCounting(t *testing.T) {
 	ts := time.Date(2022, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 	for i := 0; i < 31; i++ {
-		db.StatPatientsCountIncrement(ts)
+		_ = db.StatPatientsCountIncrement(ts)
 		ts = ts.Add(time.Hour * 24)
 	}
 
