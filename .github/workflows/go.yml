@@ -1,0 +1,23 @@
+name: Go
+
+on:
+  push:
+#    branches: [ "develop" ]
+#  pull_request:
+#    branches: [ "develop" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # Service containers to run with `runner-job`
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+
+      - name: Unit Test
+        run: |
+          go test -v ./...
