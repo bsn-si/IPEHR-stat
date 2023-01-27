@@ -8,8 +8,7 @@ func (db *DB) SyncLastBlockGet() (uint64, error) {
 	row := db.db.QueryRow("SELECT value FROM sync WHERE key = 'last_synced_block'")
 
 	var count uint64
-	err := row.Scan(&count)
-	if err != nil {
+	if err := row.Scan(&count); err != nil {
 		return 0, fmt.Errorf("row.Scan error: %w", err)
 	}
 

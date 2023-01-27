@@ -78,8 +78,6 @@ func (h *StatHandler) GetStat(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
-
-	return
 }
 
 // GetStat
@@ -138,6 +136,4 @@ func (h *StatHandler) GetTotal(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
-
-	return
 }

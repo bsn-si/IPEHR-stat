@@ -9,8 +9,8 @@ import (
 
 	"github.com/golang-migrate/migrate"
 	"github.com/golang-migrate/migrate/database/sqlite3"
-	_ "github.com/golang-migrate/migrate/source/file"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/golang-migrate/migrate/source/file" //nolint
+	_ "github.com/mattn/go-sqlite3"                   //nolint
 )
 
 type DB struct {

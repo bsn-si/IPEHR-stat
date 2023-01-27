@@ -18,8 +18,7 @@ func (db *DB) StatPatientsCountGet(start, end int64) (uint64, error) {
 	row := db.db.QueryRow(query, start, end)
 
 	var count uint64
-	err := row.Scan(&count)
-	if err != nil {
+	if err := row.Scan(&count); err != nil {
 		return 0, fmt.Errorf("row.Scan error: %w", err)
 	}
 
@@ -52,8 +51,7 @@ func (db *DB) StatDocumentsCountGet(start, end int64) (uint64, error) {
 	row := db.db.QueryRow(query, start, end)
 
 	var count uint64
-	err := row.Scan(&count)
-	if err != nil {
+	if err := row.Scan(&count); err != nil {
 		return 0, fmt.Errorf("row.Scan error: %w", err)
 	}
 
