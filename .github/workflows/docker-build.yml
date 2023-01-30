@@ -27,5 +27,5 @@ jobs:
           image: ipehr-stats
           registry: ghcr.io
           githubOrg: bsn-si
-          username: ${{ secrets.GHCR_USERNAME }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
