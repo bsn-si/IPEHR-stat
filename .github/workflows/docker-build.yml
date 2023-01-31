@@ -68,13 +68,3 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-      # - uses: actions/checkout@v3
-
-      # - uses: mr-smithers-excellent/docker-build-push@v5
-      #   name: Build & push Docker image
-      #   with:
-      #     image: ipehr-stats
-      #     registry: ghcr.io
-      #     githubOrg: bsn-si
-      #     username: ${{ github.actor }}
-      #     password: ${{ secrets.GITHUB_TOKEN }}
