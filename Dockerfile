@@ -19,5 +19,7 @@ WORKDIR /srv
 
 COPY --from=build /srv/bin/ /srv
 COPY --from=build /srv/config.json /srv
+COPY --from=build /srv/pkg/contracts /srv/contracts
+COPY --from=build /srv/db /srv/db
 
 CMD ["./ipehr-stats", "-config=./config.json"]
