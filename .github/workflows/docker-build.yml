@@ -61,6 +61,6 @@ jobs:
         with:
           context: .
           platforms: linux/amd64
-          push: ${{ github.branch == 'develop' || github.branch == 'main' }}
+          push: ${{ github.ref_name == 'develop' || github.ref_name == 'main' || github.ref_type == 'tag' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
