@@ -5,11 +5,13 @@ The service implements an open API with specified metrics.
 The data is collected and processed by accessing to [IPEHR-blockchain-indexes](https://github.com/bsn-si/IPEHR-blockchain-indexes) smart contracts.
 
 Medical statistics can be collected by the service through:
+
 - transaction analysis of contracts [IPEHR-blockchain-indexes](https://github.com/bsn-si/IPEHR-blockchain-indexes)
 - periodic direct invocation of contract methods [IPEHR-blockchain-indexes](https://github.com/bsn-si/IPEHR-blockchain-indexes)
 - making AQL queries to IPEHR-gateway
 
 For demonstration purposes, the following metrics are implemented:
+
 - number of patients registered in the system over all time;
 - number of patients logged in the system for a specified period;
 - number of EHR documents registered in the system;
@@ -19,18 +21,19 @@ For demonstration purposes, the following metrics are implemented:
 
 ## Local deployment
 
-### Go 
+### Go
+
 Please follow installation instructions provided [here](https://go.dev/doc/install).
 
 ### Clone this repo
 
-```
+``` bash
 git clone https://github.com/bsn-si/IPEHR-stat
 ```
 
 ### Build IPEHR-gateway
 
-```
+``` bash
 cd ./IPEHR-stat
 go build -o ./bin/ipehr-stat cmd/main.go
 ```
@@ -42,7 +45,7 @@ The actual addresses of deployed contracts can be found [here](https://github.co
 
 ### Run IPEHR-stat
 
-```
+``` bash
 ./bin/ipehr-stat -config=./config.json
 ```
 
