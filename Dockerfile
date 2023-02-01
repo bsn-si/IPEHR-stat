@@ -7,7 +7,6 @@ RUN apk update && \
 WORKDIR /srv
 
 COPY ./ .
-COPY config.json.example config.json
 
 RUN go mod download
 
@@ -18,8 +17,8 @@ FROM alpine:3.16
 WORKDIR /srv
 
 COPY --from=build /srv/bin/ /srv
-COPY --from=build /srv/config.json /srv
-COPY --from=build /srv/pkg/contracts /srv/contracts
+COPY --from=build /srv/config.json.example /srv/config.json
 COPY --from=build /srv/db /srv/db
+COPY --from=build /srv/pkg/contracts /srv/contracts
 
 CMD ["./ipehr-stats", "-config=./config.json"]
