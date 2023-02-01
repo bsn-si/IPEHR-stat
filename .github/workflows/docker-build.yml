@@ -40,6 +40,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=edge,branch=main
+            type=edge,branch=develop
 
 
       - name: Set up QEMU
