@@ -2,9 +2,12 @@ package syncer
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"database/sql"
-	"errors"
+	"io"
+
+	//"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -16,8 +19,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/google/uuid"
+	"github.com/vmihailenco/msgpack/v5"
 
+	"github.com/bsn-si/IPEHR-gateway/src/pkg/storage/treeindex"
 	"github.com/bsn-si/IPEHR-stat/pkg/localDB"
+	"github.com/pkg/errors"
 )
 
 type Config struct {
@@ -31,12 +38,13 @@ type Config struct {
 }
 
 type Syncer struct {
-	db        *localDB.DB
-	ethClient *ethclient.Client
-	addrList  sync.Map
-	ehrABI    *abi.ABI
-	usersABI  *abi.ABI
-	blockNum  *big.Int
+	db           *localDB.DB
+	ethClient    *ethclient.Client
+	addrList     sync.Map
+	ehrABI       *abi.ABI
+	usersABI     *abi.ABI
+	dataStoreABI *abi.ABI
+	blockNum     *big.Int
 }
 
 const (
@@ -89,7 +97,18 @@ func New(db *localDB.DB, ethClient *ethclient.Client, cfg Config) *Syncer {
 			s.ehrABI = &abi
 		case "users":
 			s.usersABI = &abi
+		case "dataStore":
+			s.dataStoreABI = &abi
 		}
+	}
+
+	switch {
+	case s.ehrABI == nil:
+		log.Fatal("Error: contract 'ehrIndex' definition is not found in config")
+	case s.usersABI == nil:
+		log.Fatal("Error: contract 'users' definition is not found in config")
+	case s.dataStoreABI == nil:
+		log.Fatal("Error: contract 'dataStore' definition is not found in config")
 	}
 
 	return &s
@@ -148,6 +167,8 @@ func (s *Syncer) Start(ctx context.Context) {
 					_abi = s.ehrABI
 				case "users":
 					_abi = s.usersABI
+				case "dataStore":
+					_abi = s.dataStoreABI
 				}
 
 				method, err := _abi.MethodById(decodedSig)
@@ -171,6 +192,11 @@ func (s *Syncer) Start(ctx context.Context) {
 					err = s.procUserNew(method, decodedData, ts)
 					if err != nil {
 						log.Fatal("[SYNC] procUserNew error: ", err)
+					}
+				case "dataUpdate":
+					err = s.procDataUpdate(method, decodedData, ts)
+					if err != nil {
+						log.Fatal("[SYNC] procDataUpdate error: ", err)
 					}
 				}
 			}
@@ -253,4 +279,121 @@ func (s *Syncer) procUserNew(method *abi.Method, inputData []byte, ts time.Time)
 	}
 
 	return nil
+}
+
+func (s *Syncer) procDataUpdate(method *abi.Method, inputData []byte, ts time.Time) error {
+	log.Println("[STAT] dataIndex update")
+
+	args, err := method.Inputs.Unpack(inputData)
+	if err != nil {
+		return fmt.Errorf("UnpackValues error: %w", err)
+	}
+
+	// interface: function unction dataUpdate(bytes32 groupID, bytes32 dataID, bytes32 ehrID, bytes data, address signer, bytes calldata signature)
+	if len(args) != 6 {
+		return fmt.Errorf("args length(%d) != 6", len(args)) //nolint
+	}
+
+	// groupID
+	switch v := args[0].(type) {
+	case [32]byte:
+	default:
+		return fmt.Errorf("unexpected type %T of arg[0] bytes32 groupID", v)
+	}
+
+	// dataID
+	switch v := args[1].(type) {
+	case [32]byte:
+	default:
+		return fmt.Errorf("unexpected type %T of arg[1] bytes32 dataID", v)
+	}
+
+	// ehrID
+	var ehrID string
+	switch v := args[2].(type) {
+	case [32]byte:
+		u, err := uuid.FromBytes(v[:16])
+		if err != nil {
+			return fmt.Errorf("ehrID uuid.FromBytes error: %w ehrID: %x", err, v[:16])
+		}
+
+		ehrID = u.String()
+	default:
+		return fmt.Errorf("unexpected type %T of arg[2] bytes32 ehrID", v)
+	}
+
+	// data
+	var compressedData []byte
+	switch v := args[3].(type) {
+	case []byte:
+		compressedData = v
+	default:
+		return fmt.Errorf("unexpected type %T of arg[3] bytes data", v)
+	}
+
+	data, err := decompress(compressedData)
+	if err != nil {
+		return fmt.Errorf("data decompression error: %w", err)
+	}
+
+	var nodeObj treeindex.ObjectNode
+	err = msgpack.Unmarshal(data, &nodeObj)
+	if err != nil {
+		return fmt.Errorf("data unmarshal error: %w", err)
+	}
+
+	switch nodeObj.GetNodeType() {
+	case treeindex.EHRNodeType:
+		var ehrNode treeindex.EHRNode
+		err = msgpack.Unmarshal(data, &ehrNode)
+		if err != nil {
+			return fmt.Errorf("ehrNode unmarshal error: %w", err)
+		}
+
+		err = treeindex.DefaultEHRIndex.AddEHRNode(&ehrNode)
+		if err != nil {
+			return fmt.Errorf("AddEHRNode error: %w", err)
+		}
+	case treeindex.CompostionNodeType:
+		var cmpNode treeindex.CompositionNode
+		err = msgpack.Unmarshal(data, &cmpNode)
+		if err != nil {
+			return fmt.Errorf("cmpNode unmarshal error: %w", err)
+		}
+
+		ehrNodes, err := treeindex.DefaultEHRIndex.GetEHRs(ehrID)
+		if err != nil {
+			return fmt.Errorf("treeindex GetEHRs error: %w ehrID: %s", err, ehrID)
+		}
+
+		if len(ehrNodes) != 1 {
+			return errors.Errorf("ehrNode with ehrID %s not nound", ehrID)
+		}
+
+		err = ehrNodes[0].AddCompositionNode(&cmpNode)
+		if err != nil {
+			return fmt.Errorf("AddCompositionNode error: %w", err)
+		}
+	default:
+		return errors.Errorf("unsupported node type: %v", nodeObj.GetNodeType())
+	}
+
+	return nil
+}
+
+func decompress(data []byte) ([]byte, error) {
+	buf := bytes.NewReader(data)
+
+	zr, err := gzip.NewReader(buf)
+	if err != nil {
+		return nil, fmt.Errorf("gzip.NewReader error: %w", err)
+	}
+	defer zr.Close()
+
+	decompressed, err := io.ReadAll(zr)
+	if err != nil {
+		return nil, fmt.Errorf("io.ReadAll error: %w", err)
+	}
+
+	return decompressed, nil
 }
