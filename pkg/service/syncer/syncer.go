@@ -7,7 +7,6 @@ import (
 	"database/sql"
 	"io"
 
-	//"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -194,7 +193,7 @@ func (s *Syncer) Start(ctx context.Context) {
 						log.Fatal("[SYNC] procUserNew error: ", err)
 					}
 				case "dataUpdate":
-					err = s.procDataUpdate(method, decodedData, ts)
+					err = s.procDataUpdate(method, decodedData)
 					if err != nil {
 						log.Fatal("[SYNC] procDataUpdate error: ", err)
 					}
@@ -281,7 +280,7 @@ func (s *Syncer) procUserNew(method *abi.Method, inputData []byte, ts time.Time)
 	return nil
 }
 
-func (s *Syncer) procDataUpdate(method *abi.Method, inputData []byte, ts time.Time) error {
+func (s *Syncer) procDataUpdate(method *abi.Method, inputData []byte) error {
 	log.Println("[STAT] dataIndex update")
 
 	args, err := method.Inputs.Unpack(inputData)
@@ -298,18 +297,19 @@ func (s *Syncer) procDataUpdate(method *abi.Method, inputData []byte, ts time.Ti
 	switch v := args[0].(type) {
 	case [32]byte:
 	default:
-		return fmt.Errorf("unexpected type %T of arg[0] bytes32 groupID", v)
+		return errors.Errorf("unexpected type %T of arg[0] bytes32 groupID", v)
 	}
 
 	// dataID
 	switch v := args[1].(type) {
 	case [32]byte:
 	default:
-		return fmt.Errorf("unexpected type %T of arg[1] bytes32 dataID", v)
+		return errors.Errorf("unexpected type %T of arg[1] bytes32 dataID", v)
 	}
 
 	// ehrID
 	var ehrID string
+
 	switch v := args[2].(type) {
 	case [32]byte:
 		u, err := uuid.FromBytes(v[:16])
@@ -319,16 +319,17 @@ func (s *Syncer) procDataUpdate(method *abi.Method, inputData []byte, ts time.Ti
 
 		ehrID = u.String()
 	default:
-		return fmt.Errorf("unexpected type %T of arg[2] bytes32 ehrID", v)
+		return errors.Errorf("unexpected type %T of arg[2] bytes32 ehrID", v)
 	}
 
 	// data
 	var compressedData []byte
+
 	switch v := args[3].(type) {
 	case []byte:
 		compressedData = v
 	default:
-		return fmt.Errorf("unexpected type %T of arg[3] bytes data", v)
+		return errors.Errorf("unexpected type %T of arg[3] bytes data", v)
 	}
 
 	data, err := decompress(compressedData)
@@ -337,6 +338,7 @@ func (s *Syncer) procDataUpdate(method *abi.Method, inputData []byte, ts time.Ti
 	}
 
 	var nodeObj treeindex.ObjectNode
+
 	err = msgpack.Unmarshal(data, &nodeObj)
 	if err != nil {
 		return fmt.Errorf("data unmarshal error: %w", err)
@@ -345,6 +347,7 @@ func (s *Syncer) procDataUpdate(method *abi.Method, inputData []byte, ts time.Ti
 	switch nodeObj.GetNodeType() {
 	case treeindex.EHRNodeType:
 		var ehrNode treeindex.EHRNode
+
 		err = msgpack.Unmarshal(data, &ehrNode)
 		if err != nil {
 			return fmt.Errorf("ehrNode unmarshal error: %w", err)
@@ -356,6 +359,7 @@ func (s *Syncer) procDataUpdate(method *abi.Method, inputData []byte, ts time.Ti
 		}
 	case treeindex.CompostionNodeType:
 		var cmpNode treeindex.CompositionNode
+
 		err = msgpack.Unmarshal(data, &cmpNode)
 		if err != nil {
 			return fmt.Errorf("cmpNode unmarshal error: %w", err)
