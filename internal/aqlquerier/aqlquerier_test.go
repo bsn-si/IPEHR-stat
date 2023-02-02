@@ -449,7 +449,7 @@ func TestService_ExecuteQuery(t *testing.T) {
 						toRef(row[0].(string)),
 						toRef(row[1].(string)),
 						row[2].(float64),
-						row[3].(*string),
+						row[3].(string),
 					}
 
 					result = append(result, r)
@@ -461,7 +461,7 @@ func TestService_ExecuteQuery(t *testing.T) {
 				return result, nil
 			},
 			[][]any{
-				{toRef("7d44b88c-4199-4bad-97dc-d78268e01398"), toRef("openEHR-EHR-OBSERVATION.pulse.v2"), 940.0, toRef("/min")},
+				{toRef("7d44b88c-4199-4bad-97dc-d78268e01398"), toRef("openEHR-EHR-OBSERVATION.pulse.v2"), 940.0, "/min"},
 			},
 			false,
 		},
@@ -515,7 +515,7 @@ func getPreparedTreeIndex(filenames ...string) error {
 			return err
 		}
 
-		if err := treeindex.AddEHR(ehr); err != nil {
+		if err := treeindex.AddEHR(&ehr); err != nil {
 			return errors.Wrap(err, "cannot add ehr into index")
 		}
 	}
@@ -531,7 +531,7 @@ func getPreparedTreeIndex(filenames ...string) error {
 			return errors.Wrap(err, "cannot unmarshal composition")
 		}
 
-		if err := treeindex.AddComposition(ehr.EhrID.Value, comp); err != nil {
+		if err := treeindex.AddComposition(ehr.EhrID.Value, &comp); err != nil {
 			return errors.Wrap(err, "cannot add Composition into EHRIndex")
 		}
 	}
