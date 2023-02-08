@@ -25,7 +25,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type SyncerRepo interface {
+type SyncerRepo interface { //nolint:revive
 	SyncLastBlockGet() (uint64, error)
 	SyncLastBlockSet(lastSyncedBlock uint64) error
 
