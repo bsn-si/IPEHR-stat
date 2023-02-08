@@ -20,7 +20,7 @@ type API struct {
 
 func New(cfg *config.Config, infra *infrastructure.Infra) *API {
 	return &API{
-		Stat:     NewStatHandler(infra.DB),
+		Stat:     NewStatHandler(infra.Service),
 		queryAPI: newAQLQueryAPI(queryexecuter.NewQueryExecuterService(infra.AqlDB)),
 	}
 }
