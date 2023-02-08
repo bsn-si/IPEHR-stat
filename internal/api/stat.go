@@ -8,18 +8,20 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-
-	"github.com/bsn-si/IPEHR-stat/pkg/localDB"
-	"github.com/bsn-si/IPEHR-stat/pkg/service/stat"
 )
 
-type StatHandler struct {
-	service *stat.Service
+type Service interface {
+	GetPatientsCount(period string) (uint64, error)
+	GetDocumentsCount(period string) (uint64, error)
 }
 
-func NewStatHandler(db *localDB.DB) *StatHandler {
+type StatHandler struct {
+	service Service
+}
+
+func NewStatHandler(svc Service) *StatHandler {
 	return &StatHandler{
-		service: stat.NewService(db),
+		service: svc,
 	}
 }
 

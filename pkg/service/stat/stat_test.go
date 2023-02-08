@@ -1,61 +1,81 @@
 package stat
 
 import (
-	"flag"
-	"os"
+	"errors"
 	"testing"
-	"time"
 
-	"github.com/bsn-si/IPEHR-stat/pkg/config"
-	"github.com/bsn-si/IPEHR-stat/pkg/localDB"
+	"github.com/bsn-si/IPEHR-stat/pkg/service/stat/mocks"
+	"github.com/golang/mock/gomock"
 )
 
-var testDBPath = "/tmp/ipehrstat_test.db"
+//go:generate mockgen -package mocks -source ./stat.go -destination ./mocks/stat_mock.go
 
 func TestCheckCounting(t *testing.T) {
-	db := prepare(t)
-	defer tearDown(t, db)
-
-	ts := time.Date(2022, time.January, 1, 0, 0, 0, 0, time.UTC)
-
-	for i := 0; i < 31; i++ {
-		_ = db.StatPatientsCountIncrement(ts)
-		ts = ts.Add(time.Hour * 24)
-	}
-
-	service := NewService(db)
-
 	tests := []struct {
 		name     string
 		period   string
+		prepare  func(repo *mocks.MockPatientsRepository)
 		expected uint64
+		wantErr  bool
 	}{
 		{
 			"1. expected 0 for old period",
 			"202001",
+			func(repo *mocks.MockPatientsRepository) {
+				repo.EXPECT().StatPatientsCountGet(int64(32503662000), int64(32503662000)).Return(uint64(0), nil)
+			},
 			0,
+			false,
 		},
 		{
 			"2. expected 31 for empty period",
 			"",
+			func(repo *mocks.MockPatientsRepository) {
+				repo.EXPECT().StatPatientsCountGet(int64(0), int64(32503662000)).Return(uint64(31), nil)
+			},
 			31,
+			false,
 		},
 		{
 			"3. expected 31 for correct period",
 			"202201",
+			func(repo *mocks.MockPatientsRepository) {
+				repo.EXPECT().StatPatientsCountGet(int64(1640995200), int64(1643673600)).Return(uint64(31), nil)
+			},
 			31,
+			false,
 		},
 		{
 			"4. expected 0 for period in future",
 			"202301",
+			func(repo *mocks.MockPatientsRepository) {
+				repo.EXPECT().StatPatientsCountGet(int64(1672531200), int64(1675209600)).Return(uint64(0), nil)
+			},
 			0,
+			false,
+		},
+		{
+			"5. error on get data",
+			"202301",
+			func(repo *mocks.MockPatientsRepository) {
+				repo.EXPECT().StatPatientsCountGet(int64(1672531200), int64(1675209600)).Return(uint64(0), errors.New("some error"))
+			},
+			0,
+			true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			repoMock := mocks.NewMockPatientsRepository(ctrl)
+			tt.prepare(repoMock)
+
+			service := NewService(repoMock)
 			count, err := service.GetPatientsCount(tt.period)
-			if err != nil {
+			if (err != nil) != tt.wantErr {
 				t.Fatal(err)
 			}
 
@@ -63,38 +83,5 @@ func TestCheckCounting(t *testing.T) {
 				t.Fatalf("Expected %d, received %d", tt.expected, count)
 			}
 		})
-	}
-}
-
-func prepare(t *testing.T) *localDB.DB {
-	t.Helper()
-
-	cfgPath := flag.String("config", "./config.json.example", "config file path")
-
-	flag.Parse()
-
-	cfg := config.New(*cfgPath)
-
-	_, err := os.Create(testDBPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	db := localDB.New(testDBPath)
-
-	err = db.Migrate(cfg.LocalDB.Migrations)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return db
-}
-
-func tearDown(t *testing.T, db *localDB.DB) {
-	db.Close()
-
-	err := os.Remove(testDBPath)
-	if err != nil {
-		t.Fatal(err)
 	}
 }

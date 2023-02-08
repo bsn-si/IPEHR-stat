@@ -50,7 +50,7 @@ func main() {
 	defer cancel()
 
 	syncer.New(
-		infra.DB,
+		infra.StatsRepo,
 		infra.EthClient,
 		syncer.Config(cfg.Sync),
 	).Start(ctx)

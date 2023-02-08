@@ -22,9 +22,16 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/storage/treeindex"
-	"github.com/bsn-si/IPEHR-stat/pkg/localDB"
 	"github.com/pkg/errors"
 )
+
+type SyncerRepo interface {
+	SyncLastBlockGet() (uint64, error)
+	SyncLastBlockSet(lastSyncedBlock uint64) error
+
+	StatPatientsCountIncrement(timestamp time.Time) error
+	StatDocumentsCountIncrement(timestamp time.Time) error
+}
 
 type Config struct {
 	Endpoint   string
@@ -37,7 +44,7 @@ type Config struct {
 }
 
 type Syncer struct {
-	db           *localDB.DB
+	repo         SyncerRepo
 	ethClient    *ethclient.Client
 	addrList     sync.Map
 	ehrABI       *abi.ABI
@@ -54,18 +61,18 @@ const (
 	RoleDoctor  uint8 = 1
 )
 
-func New(db *localDB.DB, ethClient *ethclient.Client, cfg Config) *Syncer {
+func New(repo SyncerRepo, ethClient *ethclient.Client, cfg Config) *Syncer {
 	s := Syncer{
-		db:        db,
+		repo:      repo,
 		ethClient: ethClient,
 		addrList:  sync.Map{},
 		blockNum:  big.NewInt(int64(cfg.StartBlock)),
 	}
 
-	lastBlock, err := db.SyncLastBlockGet()
+	lastBlock, err := repo.SyncLastBlockGet()
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			err = db.SyncLastBlockSet(cfg.StartBlock)
+			err = repo.SyncLastBlockSet(cfg.StartBlock)
 			if err != nil {
 				log.Fatal("[SYNC] SyncLastBlockSet error: ", err)
 			}
@@ -202,7 +209,7 @@ func (s *Syncer) Start(ctx context.Context) {
 
 			log.Printf("[SYNC] new block %v %v txs %d", block.Number().Int64(), time.Unix(int64(block.Time()), 0).Format("2006-01-02 15:04:05"), len(block.Transactions()))
 
-			err = s.db.SyncLastBlockSet(s.blockNum.Uint64())
+			err = s.repo.SyncLastBlockSet(s.blockNum.Uint64())
 			if err != nil {
 				log.Fatal("[SYNC] SyncLastBlockSet error: ", err)
 			}
@@ -247,7 +254,7 @@ func (s *Syncer) procMulticall(_abi *abi.ABI, method *abi.Method, inputData []by
 func (s *Syncer) procAddEhrDoc(method *abi.Method, inputData []byte, ts time.Time) error { //nolint
 	log.Println("[STAT] new EHR document registered")
 
-	err := s.db.StatDocumentsCountIncrement(ts)
+	err := s.repo.StatDocumentsCountIncrement(ts)
 	if err != nil {
 		return fmt.Errorf("StatDocumentsCountIncrement error: %w", err)
 	}
@@ -271,7 +278,7 @@ func (s *Syncer) procUserNew(method *abi.Method, inputData []byte, ts time.Time)
 	role := args[2].(uint8)
 
 	if role == RolePatient {
-		err := s.db.StatPatientsCountIncrement(ts)
+		err := s.repo.StatPatientsCountIncrement(ts)
 		if err != nil {
 			return fmt.Errorf("StatPatientsCountIncrement error: %w", err)
 		}

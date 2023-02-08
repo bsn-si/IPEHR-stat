@@ -4,22 +4,27 @@ import (
 	"fmt"
 	"strconv"
 	"time"
-
-	"github.com/bsn-si/IPEHR-stat/pkg/localDB"
 )
 
-type Service struct {
-	db *localDB.DB
+type PatientsRepository interface {
+	StatPatientsCountGet(start, end int64) (uint64, error)
+	StatDocumentsCountGet(start, end int64) (uint64, error)
 }
 
-func NewService(db *localDB.DB) *Service {
-	return &Service{db}
+type Service struct {
+	repo PatientsRepository
+}
+
+func NewService(repo PatientsRepository) *Service {
+	return &Service{
+		repo: repo,
+	}
 }
 
 func (s *Service) GetPatientsCount(period string) (uint64, error) {
-	start, end := ResolvPeriod(period)
+	start, end := resolvePeriod(period)
 
-	count, err := s.db.StatPatientsCountGet(start, end)
+	count, err := s.repo.StatPatientsCountGet(start, end)
 	if err != nil {
 		return 0, fmt.Errorf("db.StatPatientsCountGet error: %w", err)
 	}
@@ -28,9 +33,9 @@ func (s *Service) GetPatientsCount(period string) (uint64, error) {
 }
 
 func (s *Service) GetDocumentsCount(period string) (uint64, error) {
-	start, end := ResolvPeriod(period)
+	start, end := resolvePeriod(period)
 
-	count, err := s.db.StatDocumentsCountGet(start, end)
+	count, err := s.repo.StatDocumentsCountGet(start, end)
 	if err != nil {
 		return 0, fmt.Errorf("db.GetDocumentsCount error: %w", err)
 	}
@@ -38,7 +43,7 @@ func (s *Service) GetDocumentsCount(period string) (uint64, error) {
 	return count, nil
 }
 
-func ResolvPeriod(period string) (int64, int64) {
+func resolvePeriod(period string) (int64, int64) {
 	if period == "" {
 		return 0, 32503662000
 	}
