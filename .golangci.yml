@@ -104,7 +104,7 @@ linters:
   # enable-all: false
   # Disable specific linter
   # https://golangci-lint.run/usage/linters/#disabled-by-default-linters--e--enable
-  disable:
+  disable: []
     #- asciicheck
     #- bidichk
     #- bodyclose
@@ -199,7 +199,7 @@ linters:
     #- wsl
   # Enable presets.
   # https://golangci-lint.run/usage/linters
-  presets:
+  presets: []
     #- bugs
     #- comment
     #- complexity
@@ -221,3 +221,16 @@ issues:
   exclude:
     - "return statements should not be cuddled if block has more than two lines"
     - "anonymous switch statements should never be cuddled"
+    - composites
+  exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - funlen
+        - goconst
+        - goerr113
+    
