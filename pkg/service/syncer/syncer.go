@@ -301,53 +301,34 @@ func (s *Syncer) procDataUpdate(method *abi.Method, inputData []byte) error {
 	}
 
 	// groupID
-	switch v := args[0].(type) {
-	case [32]byte:
-	default:
-		return errors.Errorf("unexpected type %T of arg[0] bytes32 groupID", v)
+	if _, err := tryGetUUIDStr(args[0]); err != nil {
+		return errors.Wrap(err, "cannot get groupID")
 	}
 
 	// dataID
-	switch v := args[1].(type) {
-	case [32]byte:
-	default:
-		return errors.Errorf("unexpected type %T of arg[1] bytes32 dataID", v)
+	if _, err := tryGetUUIDStr(args[1]); err != nil {
+		return errors.Wrap(err, "cannot get dataID")
 	}
 
 	// ehrID
-	var ehrID string
-
-	switch v := args[2].(type) {
-	case [32]byte:
-		u, err := uuid.FromBytes(v[:16])
-		if err != nil {
-			return fmt.Errorf("ehrID uuid.FromBytes error: %w ehrID: %x", err, v[:16])
-		}
-
-		ehrID = u.String()
-	default:
-		return errors.Errorf("unexpected type %T of arg[2] bytes32 ehrID", v)
+	ehrID, err := tryGetUUIDStr(args[2])
+	if err != nil {
+		return errors.Wrap(err, "cannot get ehr_id")
 	}
 
 	// data
-	var compressedData []byte
-
-	switch v := args[3].(type) {
-	case []byte:
-		compressedData = v
-	default:
-		return errors.Errorf("unexpected type %T of arg[3] bytes data", v)
-	}
-
-	data, err := decompress(compressedData)
+	data, err := getMessageData(args[3])
 	if err != nil {
-		return fmt.Errorf("data decompression error: %w", err)
+		return errors.Wrap(err, "cannot get message data")
 	}
 
+	return s.unmarshalDataAndStoreInIndex(ehrID, data)
+}
+
+func (s *Syncer) unmarshalDataAndStoreInIndex(ehrID string, data []byte) error {
 	var nodeObj treeindex.ObjectNode
 
-	err = msgpack.Unmarshal(data, &nodeObj)
-	if err != nil {
+	if err := msgpack.Unmarshal(data, &nodeObj); err != nil {
 		return fmt.Errorf("data unmarshal error: %w", err)
 	}
 
@@ -355,20 +336,17 @@ func (s *Syncer) procDataUpdate(method *abi.Method, inputData []byte) error {
 	case treeindex.EHRNodeType:
 		var ehrNode treeindex.EHRNode
 
-		err = msgpack.Unmarshal(data, &ehrNode)
-		if err != nil {
+		if err := msgpack.Unmarshal(data, &ehrNode); err != nil {
 			return fmt.Errorf("ehrNode unmarshal error: %w", err)
 		}
 
-		err = treeindex.DefaultEHRIndex.AddEHRNode(&ehrNode)
-		if err != nil {
+		if err := treeindex.DefaultEHRIndex.AddEHRNode(&ehrNode); err != nil {
 			return fmt.Errorf("AddEHRNode error: %w", err)
 		}
 	case treeindex.CompostionNodeType:
 		var cmpNode treeindex.CompositionNode
 
-		err = msgpack.Unmarshal(data, &cmpNode)
-		if err != nil {
+		if err := msgpack.Unmarshal(data, &cmpNode); err != nil {
 			return fmt.Errorf("cmpNode unmarshal error: %w", err)
 		}
 
@@ -390,6 +368,35 @@ func (s *Syncer) procDataUpdate(method *abi.Method, inputData []byte) error {
 	}
 
 	return nil
+}
+
+func tryGetUUIDStr(data interface{}) (string, error) {
+	v, ok := data.([32]byte)
+	if !ok {
+		return "", errors.Errorf("unexpected type %T of data bytes32 uuid", data)
+	}
+
+	ehrID, err := uuid.FromBytes(v[:16])
+	if err != nil {
+		return "", fmt.Errorf("uuid.FromBytes error: %w value: %x", err, v[:16])
+	}
+
+	return ehrID.String(), nil
+}
+
+func getMessageData(val interface{}) ([]byte, error) {
+	compressedData, ok := val.([]byte)
+
+	if !ok {
+		return nil, errors.Errorf("unexpected type %T of val bytes data", val)
+	}
+
+	data, err := decompress(compressedData)
+	if err != nil {
+		return nil, fmt.Errorf("data decompression error: %w", err)
+	}
+
+	return data, nil
 }
 
 func decompress(data []byte) ([]byte, error) {
