@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS "bk_indexes" (
+CREATE TABLE IF NOT EXISTS "tree_indexe_chunks" (
     "key" TEXT NOT NULL,
     "created_at" INTEGER DEFAULT CURRENT_TIMESTAMP,
     "group_id" TEXT NOT NULL,

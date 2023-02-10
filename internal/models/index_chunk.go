@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type IndexChunk struct {
@@ -22,6 +24,7 @@ func NewIndexChunk(groupID, dataID, ehrID string, data []byte) IndexChunk {
 	hash.Write(data)
 
 	idxChunck := IndexChunk{
+		Key:     uuid.NewString(),
 		GroupID: groupID,
 		DataID:  dataID,
 		EhrID:   ehrID,

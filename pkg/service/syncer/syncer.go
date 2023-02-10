@@ -22,6 +22,7 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/storage/treeindex"
+	"github.com/bsn-si/IPEHR-stat/internal/models"
 	"github.com/pkg/errors"
 )
 
@@ -31,6 +32,11 @@ type SyncerRepo interface { //nolint:revive
 
 	StatPatientsCountIncrement(ctx context.Context, timestamp time.Time) error
 	StatDocumentsCountIncrement(ctx context.Context, timestamp time.Time) error
+}
+
+type TreeIndexChunkRepositpry interface {
+	AddNewIndexObject(ctx context.Context, chunk models.IndexChunk) error
+	GetAllIndexObjects(ctx context.Context) ([]models.IndexChunk, error)
 }
 
 type Config struct {
@@ -45,6 +51,7 @@ type Config struct {
 
 type Syncer struct {
 	repo         SyncerRepo
+	chunkRepo    TreeIndexChunkRepositpry
 	ethClient    *ethclient.Client
 	addrList     sync.Map
 	ehrABI       *abi.ABI
@@ -61,9 +68,10 @@ const (
 	RoleDoctor  uint8 = 1
 )
 
-func New(repo SyncerRepo, ethClient *ethclient.Client, cfg Config) *Syncer {
+func New(repo SyncerRepo, chunkRepo TreeIndexChunkRepositpry, ethClient *ethclient.Client, cfg Config) *Syncer {
 	s := Syncer{
 		repo:      repo,
+		chunkRepo: chunkRepo,
 		ethClient: ethClient,
 		addrList:  sync.Map{},
 		blockNum:  big.NewInt(int64(cfg.StartBlock)),
@@ -121,6 +129,12 @@ func New(repo SyncerRepo, ethClient *ethclient.Client, cfg Config) *Syncer {
 }
 
 func (s *Syncer) Start(ctx context.Context) {
+	log.Printf("[SYNC] Load tree index state from storage")
+
+	if err := s.loadIndexDataFromStorage(ctx); err != nil {
+		log.Fatal(err)
+	}
+
 	log.Printf("[SYNC] Starting sync from block number: %d", s.blockNum)
 
 	go func() {
@@ -135,6 +149,21 @@ func (s *Syncer) Start(ctx context.Context) {
 			}
 		}
 	}()
+}
+
+func (s *Syncer) loadIndexDataFromStorage(ctx context.Context) error {
+	chucks, err := s.chunkRepo.GetAllIndexObjects(ctx)
+	if err != nil {
+		return fmt.Errorf("cannot load index data from storage: %w", err)
+	}
+
+	for _, chunk := range chucks {
+		if err := s.unmarshalDataAndStoreInIndex(chunk.EhrID, chunk.Data); err != nil {
+			return fmt.Errorf("cannot store chunk into index: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (s *Syncer) tryProccessNextBlock(ctx context.Context, bInt *big.Int) {
@@ -322,12 +351,14 @@ func (s *Syncer) procDataUpdate(ctx context.Context, method *abi.Method, inputDa
 	}
 
 	// groupID
-	if _, err := tryGetUUIDStr(args[0]); err != nil {
+	groupID, err := tryGetUUIDStr(args[0])
+	if err != nil {
 		return errors.Wrap(err, "cannot get groupID")
 	}
 
 	// dataID
-	if _, err := tryGetUUIDStr(args[1]); err != nil {
+	dataID, err := tryGetUUIDStr(args[1])
+	if err != nil {
 		return errors.Wrap(err, "cannot get dataID")
 	}
 
@@ -341,6 +372,11 @@ func (s *Syncer) procDataUpdate(ctx context.Context, method *abi.Method, inputDa
 	data, err := getMessageData(args[3])
 	if err != nil {
 		return errors.Wrap(err, "cannot get message data")
+	}
+
+	idxChunk := models.NewIndexChunk(groupID, dataID, ehrID, data)
+	if err := s.chunkRepo.AddNewIndexObject(ctx, idxChunk); err != nil {
+		return errors.Wrap(err, "cannot save index chunk into sotrage")
 	}
 
 	return s.unmarshalDataAndStoreInIndex(ehrID, data)
