@@ -24,6 +24,7 @@ type Infra struct {
 	AqlDB     *sqlx.DB
 
 	StatsRepo *repository.StatsStorage
+	ChunkRepo *repository.IndexStorage
 	Service   *stat.Service
 }
 
@@ -55,6 +56,7 @@ func New(cfg *config.Config) *Infra {
 		EthClient: ehtClient,
 		AqlDB:     aqlDB,
 		StatsRepo: statsRepo,
+		ChunkRepo: repository.NewIndexStorage(db),
 		Service:   svc,
 	}
 }
