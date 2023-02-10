@@ -26,11 +26,11 @@ import (
 )
 
 type SyncerRepo interface { //nolint:revive
-	SyncLastBlockGet() (uint64, error)
-	SyncLastBlockSet(lastSyncedBlock uint64) error
+	SyncLastBlockGet(ctx context.Context) (uint64, error)
+	SyncLastBlockSet(ctx context.Context, lastSyncedBlock uint64) error
 
-	StatPatientsCountIncrement(timestamp time.Time) error
-	StatDocumentsCountIncrement(timestamp time.Time) error
+	StatPatientsCountIncrement(ctx context.Context, timestamp time.Time) error
+	StatDocumentsCountIncrement(ctx context.Context, timestamp time.Time) error
 }
 
 type Config struct {
@@ -69,10 +69,10 @@ func New(repo SyncerRepo, ethClient *ethclient.Client, cfg Config) *Syncer {
 		blockNum:  big.NewInt(int64(cfg.StartBlock)),
 	}
 
-	lastBlock, err := repo.SyncLastBlockGet()
+	lastBlock, err := repo.SyncLastBlockGet(context.Background())
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			err = repo.SyncLastBlockSet(cfg.StartBlock)
+			err = repo.SyncLastBlockSet(context.Background(), cfg.StartBlock)
 			if err != nil {
 				log.Fatal("[SYNC] SyncLastBlockSet error: ", err)
 			}
@@ -121,105 +121,126 @@ func New(repo SyncerRepo, ethClient *ethclient.Client, cfg Config) *Syncer {
 }
 
 func (s *Syncer) Start(ctx context.Context) {
-	var bigInt1 = big.NewInt(1)
-
 	log.Printf("[SYNC] Starting sync from block number: %d", s.blockNum)
 
 	go func() {
+		bInt := big.NewInt(1)
+
 		for {
-			// get the full block details, using a custom jsonrpc ID as a test
-			block, err := s.ethClient.BlockByNumber(ctx, s.blockNum)
-			if err != nil {
-				if err.Error() == "not found" {
-					time.Sleep(BlockNotFoundTimeout)
-					continue
-				} else {
-					log.Printf("[SYNC] Block %d %v get error:", s.blockNum, err)
-					log.Printf("[SYNC] BlockByNumber error: %v Sleeping %s...", err, BlockGetErrorTimeout)
-					time.Sleep(BlockGetErrorTimeout)
-					continue
-				}
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				s.tryProccessNextBlock(ctx, bInt)
 			}
-
-			ts := time.Unix(int64(block.Time()), 0)
-
-			for _, blockTx := range block.Transactions() {
-				if blockTx.To() == nil {
-					// contract creation
-					continue
-				}
-
-				contractName, ok := s.addrList.Load(*blockTx.To())
-				if !ok {
-					continue
-				}
-
-				receipt, err := s.ethClient.TransactionReceipt(ctx, blockTx.Hash())
-				if err != nil {
-					log.Printf("[SYNC] tx %s receipt get error: %v", blockTx.Hash().String(), err)
-				}
-
-				if receipt.Status == types.ReceiptStatusFailed {
-					continue
-				}
-
-				decodedSig := blockTx.Data()[:4]
-				decodedData := blockTx.Data()[4:]
-
-				var _abi *abi.ABI
-
-				switch contractName {
-				case "ehrIndex":
-					_abi = s.ehrABI
-				case "users":
-					_abi = s.usersABI
-				case "dataStore":
-					_abi = s.dataStoreABI
-				}
-
-				method, err := _abi.MethodById(decodedSig)
-				if err != nil {
-					log.Println("abi.MethodById error: ", err)
-					continue
-				}
-
-				switch method.Name {
-				case "multicall":
-					err = s.procMulticall(_abi, method, decodedData, ts)
-					if err != nil {
-						log.Fatal("[SYNC] procMulticall error: ", err)
-					}
-				case "addEhrDoc":
-					err = s.procAddEhrDoc(method, decodedData, ts)
-					if err != nil {
-						log.Fatal("[SYNC] procAddEhrDoc error: ", err)
-					}
-				case "userNew":
-					err = s.procUserNew(method, decodedData, ts)
-					if err != nil {
-						log.Fatal("[SYNC] procUserNew error: ", err)
-					}
-				case "dataUpdate":
-					err = s.procDataUpdate(method, decodedData)
-					if err != nil {
-						log.Fatal("[SYNC] procDataUpdate error: ", err)
-					}
-				}
-			}
-
-			log.Printf("[SYNC] new block %v %v txs %d", block.Number().Int64(), time.Unix(int64(block.Time()), 0).Format("2006-01-02 15:04:05"), len(block.Transactions()))
-
-			err = s.repo.SyncLastBlockSet(s.blockNum.Uint64())
-			if err != nil {
-				log.Fatal("[SYNC] SyncLastBlockSet error: ", err)
-			}
-
-			s.blockNum.Add(s.blockNum, bigInt1)
 		}
 	}()
 }
 
-func (s *Syncer) procMulticall(_abi *abi.ABI, method *abi.Method, inputData []byte, ts time.Time) error {
+func (s *Syncer) tryProccessNextBlock(ctx context.Context, bInt *big.Int) {
+	// get the full block details, using a custom jsonrpc ID as a test
+	block, err := s.ethClient.BlockByNumber(ctx, s.blockNum)
+	if err != nil {
+		if err.Error() == "not found" {
+			time.Sleep(BlockNotFoundTimeout)
+		} else {
+			log.Printf("[SYNC] Block %d %v get error:", s.blockNum, err)
+			log.Printf("[SYNC] BlockByNumber error: %v Sleeping %s...", err, BlockGetErrorTimeout)
+			time.Sleep(BlockGetErrorTimeout)
+		}
+
+		return
+	}
+
+	ts := time.Unix(int64(block.Time()), 0)
+
+	for _, blockTx := range block.Transactions() {
+		if blockTx.To() == nil {
+			// contract creation
+			continue
+		}
+
+		contractNameRow, ok := s.addrList.Load(*blockTx.To())
+		if !ok {
+			continue
+		}
+
+		contractName, ok := contractNameRow.(string)
+		if !ok {
+			continue
+		}
+
+		receipt, err := s.ethClient.TransactionReceipt(ctx, blockTx.Hash())
+		if err != nil {
+			log.Printf("[SYNC] tx %s receipt get error: %v", blockTx.Hash().String(), err)
+		}
+
+		if receipt.Status == types.ReceiptStatusFailed {
+			continue
+		}
+
+		s.processTransactionBlock(ctx, contractName, blockTx, ts)
+	}
+
+	log.Printf("[SYNC] new block %v %v txs %d", block.Number().Int64(), time.Unix(int64(block.Time()), 0).Format("2006-01-02 15:04:05"), len(block.Transactions()))
+
+	if err := s.repo.SyncLastBlockSet(ctx, s.blockNum.Uint64()); err != nil {
+		log.Fatal("[SYNC] SyncLastBlockSet error: ", err)
+	}
+
+	s.blockNum.Add(s.blockNum, bInt)
+}
+
+func (s *Syncer) processTransactionBlock(ctx context.Context, contractName string, blockTx *types.Transaction, ts time.Time) {
+	decodedSig := blockTx.Data()[:4]
+	decodedData := blockTx.Data()[4:]
+
+	abi := s.getAbiByForContract(contractName)
+
+	method, err := abi.MethodById(decodedSig)
+	if err != nil {
+		log.Println("abi.MethodById error: ", err)
+		return
+	}
+
+	switch method.Name {
+	case "multicall":
+		err = s.procMulticall(ctx, abi, method, decodedData, ts)
+		if err != nil {
+			log.Fatal("[SYNC] procMulticall error: ", err)
+		}
+	case "addEhrDoc":
+		err = s.procAddEhrDoc(ctx, method, decodedData, ts)
+		if err != nil {
+			log.Fatal("[SYNC] procAddEhrDoc error: ", err)
+		}
+	case "userNew":
+		err = s.procUserNew(ctx, method, decodedData, ts)
+		if err != nil {
+			log.Fatal("[SYNC] procUserNew error: ", err)
+		}
+	case "dataUpdate":
+		err = s.procDataUpdate(ctx, method, decodedData)
+		if err != nil {
+			log.Fatal("[SYNC] procDataUpdate error: ", err)
+		}
+	}
+}
+
+func (s *Syncer) getAbiByForContract(contractName string) *abi.ABI {
+	switch contractName {
+	case "ehrIndex":
+		return s.ehrABI
+	case "users":
+		return s.usersABI
+	case "dataStore":
+		return s.dataStoreABI
+	}
+
+	return nil
+}
+
+func (s *Syncer) procMulticall(ctx context.Context, _abi *abi.ABI, method *abi.Method, inputData []byte, ts time.Time) error {
 	args, err := method.Inputs.Unpack(inputData)
 	if err != nil {
 		return fmt.Errorf("UnpackValues error: %w", err)
@@ -236,12 +257,12 @@ func (s *Syncer) procMulticall(_abi *abi.ABI, method *abi.Method, inputData []by
 
 		switch method.Name {
 		case "addEhrDoc":
-			err = s.procAddEhrDoc(method, decodedData, ts)
+			err = s.procAddEhrDoc(ctx, method, decodedData, ts)
 			if err != nil {
 				return fmt.Errorf("procAddEhrDoc error: %w", err)
 			}
 		case "userNew":
-			err = s.procUserNew(method, decodedData, ts)
+			err = s.procUserNew(ctx, method, decodedData, ts)
 			if err != nil {
 				return fmt.Errorf("procUserNew error: %w", err)
 			}
@@ -251,10 +272,10 @@ func (s *Syncer) procMulticall(_abi *abi.ABI, method *abi.Method, inputData []by
 	return nil
 }
 
-func (s *Syncer) procAddEhrDoc(method *abi.Method, inputData []byte, ts time.Time) error { //nolint
+func (s *Syncer) procAddEhrDoc(ctx context.Context, method *abi.Method, inputData []byte, ts time.Time) error { //nolint
 	log.Println("[STAT] new EHR document registered")
 
-	err := s.repo.StatDocumentsCountIncrement(ts)
+	err := s.repo.StatDocumentsCountIncrement(ctx, ts)
 	if err != nil {
 		return fmt.Errorf("StatDocumentsCountIncrement error: %w", err)
 	}
@@ -262,7 +283,7 @@ func (s *Syncer) procAddEhrDoc(method *abi.Method, inputData []byte, ts time.Tim
 	return nil
 }
 
-func (s *Syncer) procUserNew(method *abi.Method, inputData []byte, ts time.Time) error {
+func (s *Syncer) procUserNew(ctx context.Context, method *abi.Method, inputData []byte, ts time.Time) error {
 	log.Println("[STAT] new patient registered")
 
 	args, err := method.Inputs.Unpack(inputData)
@@ -278,7 +299,7 @@ func (s *Syncer) procUserNew(method *abi.Method, inputData []byte, ts time.Time)
 	role := args[2].(uint8)
 
 	if role == RolePatient {
-		err := s.repo.StatPatientsCountIncrement(ts)
+		err := s.repo.StatPatientsCountIncrement(ctx, ts)
 		if err != nil {
 			return fmt.Errorf("StatPatientsCountIncrement error: %w", err)
 		}
@@ -287,7 +308,7 @@ func (s *Syncer) procUserNew(method *abi.Method, inputData []byte, ts time.Time)
 	return nil
 }
 
-func (s *Syncer) procDataUpdate(method *abi.Method, inputData []byte) error {
+func (s *Syncer) procDataUpdate(ctx context.Context, method *abi.Method, inputData []byte) error {
 	log.Println("[STAT] dataIndex update")
 
 	args, err := method.Inputs.Unpack(inputData)
