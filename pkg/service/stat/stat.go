@@ -1,14 +1,15 @@
 package stat
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
 )
 
 type PatientsRepository interface {
-	StatPatientsCountGet(start, end int64) (uint64, error)
-	StatDocumentsCountGet(start, end int64) (uint64, error)
+	StatPatientsCountGet(ctx context.Context, start, end int64) (uint64, error)
+	StatDocumentsCountGet(ctx context.Context, start, end int64) (uint64, error)
 }
 
 type Service struct {
@@ -21,10 +22,10 @@ func NewService(repo PatientsRepository) *Service {
 	}
 }
 
-func (s *Service) GetPatientsCount(period string) (uint64, error) {
+func (s *Service) GetPatientsCount(ctx context.Context, period string) (uint64, error) {
 	start, end := resolvePeriod(period)
 
-	count, err := s.repo.StatPatientsCountGet(start, end)
+	count, err := s.repo.StatPatientsCountGet(ctx, start, end)
 	if err != nil {
 		return 0, fmt.Errorf("db.StatPatientsCountGet error: %w", err)
 	}
@@ -32,10 +33,10 @@ func (s *Service) GetPatientsCount(period string) (uint64, error) {
 	return count, nil
 }
 
-func (s *Service) GetDocumentsCount(period string) (uint64, error) {
+func (s *Service) GetDocumentsCount(ctx context.Context, period string) (uint64, error) {
 	start, end := resolvePeriod(period)
 
-	count, err := s.repo.StatDocumentsCountGet(start, end)
+	count, err := s.repo.StatDocumentsCountGet(ctx, start, end)
 	if err != nil {
 		return 0, fmt.Errorf("db.GetDocumentsCount error: %w", err)
 	}
