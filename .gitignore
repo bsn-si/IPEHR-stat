@@ -2,3 +2,4 @@ bin
 
 config.json
 db/local.db
+.DS_Store
