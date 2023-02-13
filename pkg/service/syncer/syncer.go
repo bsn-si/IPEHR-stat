@@ -158,6 +158,10 @@ func (s *Syncer) loadIndexDataFromStorage(ctx context.Context) error {
 	}
 
 	for _, chunk := range chucks {
+		if !chunk.Validate() {
+			return fmt.Errorf("data chunk invalid: %v", chunk.Key) //nolint
+		}
+
 		if err := s.unmarshalDataAndStoreInIndex(chunk.EhrID, chunk.Data); err != nil {
 			return fmt.Errorf("cannot store chunk into index: %w", err)
 		}
