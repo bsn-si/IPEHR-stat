@@ -20,7 +20,7 @@ func NewIndexStorage(db *sqlx.DB) *IndexStorage {
 }
 
 func (store *IndexStorage) AddNewIndexObject(ctx context.Context, chunk models.IndexChunk) error {
-	const query = `INSERT INTO tree_indexe_chunks (key, group_id, data_id, ehr_id, data, hash)
+	const query = `INSERT INTO tree_index_chunks (key, group_id, data_id, ehr_id, data, hash)
 	VALUES (:key, :group_id, :data_id, :ehr_id, :data, :hash);`
 
 	if _, err := store.db.NamedExecContext(ctx, query, chunk); err != nil {
@@ -31,7 +31,7 @@ func (store *IndexStorage) AddNewIndexObject(ctx context.Context, chunk models.I
 }
 
 func (store *IndexStorage) GetAllIndexObjects(ctx context.Context) ([]models.IndexChunk, error) {
-	const query = `SELECT key, group_id, data_id, ehr_id, data, hash FROM tree_indexe_chunks ORDER BY created_at;`
+	const query = `SELECT key, group_id, data_id, ehr_id, data, hash FROM tree_index_chunks ORDER BY created_at;`
 
 	result := []models.IndexChunk{}
 	if err := store.db.SelectContext(ctx, &result, query); err != nil {

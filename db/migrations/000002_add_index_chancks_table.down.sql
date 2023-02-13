@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS "tree_indexe_chunks";
+DROP TABLE IF EXISTS "tree_index_chunks";
