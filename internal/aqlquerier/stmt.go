@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/aqlprocessor"
-	"github.com/bsn-si/IPEHR-gateway/src/pkg/errors"
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/storage/treeindex"
+	"github.com/pkg/errors"
 )
 
 type Stmt struct {
@@ -64,7 +64,7 @@ func (stmt *Stmt) QueryContext(ctx context.Context, args []driver.NamedValue) (d
 
 	for _, arg := range args {
 		if _, ok := stmt.query.Parameters[arg.Name]; !ok {
-			return nil, fmt.Errorf("unknown query paramenter: '%s'", arg.Name) // nolint
+			return nil, fmt.Errorf("Unknown query paramenter: '%s'", arg.Name) // nolint
 		}
 
 		parameterValues[arg.Name] = arg.Value

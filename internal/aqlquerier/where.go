@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/aqlprocessor"
-	"github.com/bsn-si/IPEHR-gateway/src/pkg/errors"
+	"github.com/pkg/errors"
 )
 
 func processWhere(where *aqlprocessor.Where, sources dataRows) (dataRows, error) {
@@ -37,13 +37,13 @@ func processWhere(where *aqlprocessor.Where, sources dataRows) (dataRows, error)
 			return mergeDataSourcesNOT(sources, results[0]), nil
 		case aqlprocessor.ANDOperator:
 			if len(results) != 2 {
-				return nil, errors.New("invalid data sources count")
+				return nil, ErrInvalidOperandCount
 			}
 
 			return mergeDataSourcesAND(results[0], results[1]), nil
 		case aqlprocessor.OROperator:
 			if len(results) != 2 {
-				return nil, errors.New("invalid data sources count")
+				return nil, ErrInvalidOperandCount
 			}
 
 			return mergeDataSourcesOR(results[0], results[1]), nil
@@ -54,7 +54,7 @@ func processWhere(where *aqlprocessor.Where, sources dataRows) (dataRows, error)
 		return processWhere(where.Next[0], sources)
 	}
 
-	return nil, errors.New("unexpected WHERE object state")
+	return nil, ErrInvalidWhere
 }
 
 func getDataSourceForIdentifierExpr(ie *aqlprocessor.IdentifiedExpr, rows dataRows) (dataRows, error) {

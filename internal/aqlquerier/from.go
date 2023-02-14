@@ -5,8 +5,8 @@ import (
 	"reflect"
 
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/aqlprocessor"
-	"github.com/bsn-si/IPEHR-gateway/src/pkg/errors"
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/storage/treeindex"
+	"github.com/pkg/errors"
 
 	"github.com/google/uuid"
 )
@@ -107,7 +107,6 @@ func (exec *executer) processRowsContainsExpr(rootCell *dataCell, containsExpr *
 			}
 		}
 
-		// result = append(result, nodeDataCells)
 	default:
 		return nil, fmt.Errorf("unexpected operand type: %T", operand) //nolint
 	}
@@ -124,7 +123,7 @@ func (exec *executer) getDataForClassExpr(node treeindex.Noder, operand aqlproce
 	if node == nil {
 		result, err = exec.getDataForClassExpression(operand)
 	} else {
-		result, err = exec.getDataForClassExpressionnFromNode(node, operand)
+		result, err = exec.getDataForClassExpressionFromNode(node, operand)
 	}
 
 	if err != nil {
@@ -172,7 +171,7 @@ func (exec *executer) getDataForClassExpression(operand aqlprocessor.ClassExpres
 	return cells, nil
 }
 
-func (exec *executer) getDataForClassExpressionnFromNode(node treeindex.Noder, from aqlprocessor.ClassExpression) ([]dataCell, error) {
+func (exec *executer) getDataForClassExpressionFromNode(node treeindex.Noder, from aqlprocessor.ClassExpression) ([]dataCell, error) {
 	result := []dataCell{}
 
 	name := from.Identifiers[0]
@@ -195,7 +194,7 @@ func (exec *executer) getDataForClassExpressionnFromNode(node treeindex.Noder, f
 
 		container = sources
 	default:
-		return nil, fmt.Errorf("not imlemented error for: %T", node) //nolint
+		return nil, fmt.Errorf("not implemented error for: %T", node) //nolint
 	}
 
 	for _, nodes := range container {
@@ -237,7 +236,7 @@ func (exec *executer) checkNodeByPathPredicate(node treeindex.Noder, pathPredica
 		return false, fmt.Errorf("unexpected PathPredicate Type: %v", pathPredicate.Type) //nolint
 	}
 
-	return false, errors.New("not implemented")
+	return false, ErrNotImplemented
 }
 
 func (exec *executer) checkNodeByStandartPathPredicate(node treeindex.Noder, predicate *aqlprocessor.StandartPredicate) (bool, error) {
@@ -294,7 +293,7 @@ func (exec *executer) checkNodeByArchetypePredicate(node treeindex.Noder, predic
 
 	valueNode, ok := nodeArchetypeID.(*treeindex.ValueNode)
 	if !ok {
-		return false, errors.New("invalid  archetype_node_id type")
+		return false, errors.New("invalid archetype_node_id type")
 	}
 
 	return valueNode.GetData().(string) == targetArchetypeID, nil

@@ -6,8 +6,8 @@ import (
 	"database/sql/driver"
 
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/aqlprocessor"
-	"github.com/bsn-si/IPEHR-gateway/src/pkg/errors"
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/storage/treeindex"
+	"github.com/pkg/errors"
 )
 
 func init() {
@@ -36,7 +36,7 @@ func (conn *AQLConn) Prepare(query string) (driver.Stmt, error) {
 func (conn *AQLConn) PrepareContext(_ context.Context, query string) (driver.Stmt, error) {
 	aqlQuery, err := aqlprocessor.NewAqlProcessor(query).Process()
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot prepare AQL query")
+		return nil, errors.Wrapf(ErrInvalidQuery, "cannot prepare AQL: %v", err)
 	}
 
 	stmt := &Stmt{
@@ -50,7 +50,7 @@ func (conn *AQLConn) PrepareContext(_ context.Context, query string) (driver.Stm
 // implements driver.Tx interface
 // Rollback - not implemented ...
 func (conn *AQLConn) Rollback() error {
-	return errors.New("Rollback method not implemented")
+	return ErrNotImplemented
 }
 
 // Close invalidates and potentially stops any current
@@ -72,5 +72,5 @@ func (conn *AQLConn) Close() error {
 //
 // Deprecated: Drivers should implement ConnBeginTx instead (or additionally).
 func (conn *AQLConn) Begin() (driver.Tx, error) {
-	return nil, errors.New("not implemented")
+	return nil, ErrNotImplemented
 }

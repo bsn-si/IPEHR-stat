@@ -3,7 +3,7 @@ package aqlquerier
 import (
 	"database/sql/driver"
 
-	"github.com/bsn-si/IPEHR-gateway/src/pkg/errors"
+	"github.com/pkg/errors"
 )
 
 type AQLRowser interface {

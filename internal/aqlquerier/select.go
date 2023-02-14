@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/aqlprocessor"
-	"github.com/bsn-si/IPEHR-gateway/src/pkg/errors"
+	"github.com/pkg/errors"
 )
 
 func (exec *executer) queryData(sources dataRows) (*Rows, error) {
