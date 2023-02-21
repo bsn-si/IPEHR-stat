@@ -76,7 +76,7 @@ func main() {
 
 	<-ctx.Done()
 
-	log.Println("Server shotdowning...")
+	log.Println("Server shutdowning...")
 
 	stopCtx, stopCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer stopCancel()

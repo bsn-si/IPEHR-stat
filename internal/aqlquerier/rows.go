@@ -40,6 +40,16 @@ func (rs *Rows) Columns() []string {
 	return result
 }
 
+func (rs *Rows) Rows() []any {
+	result := []any{}
+
+	for _, r := range rs.rows {
+		result = append(result, r.values)
+	}
+
+	return result
+}
+
 // Close closes the rows iterator.
 func (rs *Rows) Close() error {
 	return nil

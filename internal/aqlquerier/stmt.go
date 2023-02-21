@@ -1,17 +1,14 @@
 package aqlquerier
 
 import (
-	"context"
 	"database/sql/driver"
-	"fmt"
 
-	"github.com/bsn-si/IPEHR-gateway/src/pkg/aqlprocessor"
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/errors"
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/storage/treeindex"
 )
 
 type Stmt struct {
-	query *aqlprocessor.Query
+	//query *aqlprocessor.Query
 	index *treeindex.EHRIndex
 }
 
@@ -35,7 +32,6 @@ func (stmt *Stmt) Close() error {
 // its number of placeholders. In that case, the sql package
 // will not sanity check Exec or Query argument counts.
 func (stmt *Stmt) NumInput() int {
-	// return stmt.query.ParametersCount()
 	return -1
 }
 
@@ -59,21 +55,32 @@ func (stmt *Stmt) Query(args []driver.Value) (driver.Rows, error) {
 // SELECT.
 //
 // QueryContext must honor the context timeout and return when it is canceled.
+/*
 func (stmt *Stmt) QueryContext(ctx context.Context, args []driver.NamedValue) (driver.Rows, error) {
+	var query *aqlprocessor.Query
+
+	switch q := args[len(args)-1].Value.(type) {
+	case *aqlprocessor.Query:
+		query = q
+		args = args[:len(args)-1]
+	default:
+		return nil, fmt.Errorf("incorrect query type. Expected '*aqlprocessor.Query', received: %T", q)
+	}
+
 	parameterValues := map[string]driver.Value{}
 
 	for _, arg := range args {
-		if _, ok := stmt.query.Parameters[arg.Name]; !ok {
+		if _, ok := query.Parameters[arg.Name]; !ok {
 			return nil, fmt.Errorf("unknown query paramenter: '%s'", arg.Name) // nolint
 		}
 
 		parameterValues[arg.Name] = arg.Value
 	}
 
-	exec := executer{
-		query:  stmt.query,
-		params: parameterValues,
-		index:  stmt.index,
+	exec := Executer{
+		Query:  query,
+		Params: parameterValues,
+		Index:  stmt.index,
 	}
 
 	rows, err := exec.run()
@@ -83,3 +90,4 @@ func (stmt *Stmt) QueryContext(ctx context.Context, args []driver.NamedValue) (d
 
 	return rows, nil
 }
+*/

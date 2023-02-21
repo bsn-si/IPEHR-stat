@@ -32,8 +32,8 @@ type dataRow struct {
 
 type dataRows []dataRow
 
-func (exec *executer) findSources() (dataRows, error) {
-	rows, err := exec.getDataRows(exec.query.From.ContainsExpr)
+func (exec *Executer) findSources() (dataRows, error) {
+	rows, err := exec.getDataRows(exec.Query.From.ContainsExpr)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot find data rows")
 	}
@@ -41,7 +41,7 @@ func (exec *executer) findSources() (dataRows, error) {
 	return rows, nil
 }
 
-func (exec *executer) getDataRows(containsExpr aqlprocessor.ContainsExpr) (dataRows, error) {
+func (exec *Executer) getDataRows(containsExpr aqlprocessor.ContainsExpr) (dataRows, error) {
 	result, err := exec.processRowsContainsExpr(nil, &containsExpr)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot process rows")
@@ -50,11 +50,11 @@ func (exec *executer) getDataRows(containsExpr aqlprocessor.ContainsExpr) (dataR
 	return result, nil
 }
 
-func (exec *executer) processRowsContainsExpr(rootCell *dataCell, containsExpr *aqlprocessor.ContainsExpr) (dataRows, error) {
+func (exec *Executer) processRowsContainsExpr(rootCell *dataCell, containsExpr *aqlprocessor.ContainsExpr) (dataRows, error) {
 	result := dataRows{}
 
 	switch operand := containsExpr.Operand.(type) {
-	case aqlprocessor.ClassExpression:
+	case *aqlprocessor.ClassExpression:
 		var node treeindex.Noder
 		if rootCell != nil {
 			node = rootCell.data
@@ -115,7 +115,7 @@ func (exec *executer) processRowsContainsExpr(rootCell *dataCell, containsExpr *
 	return result, nil
 }
 
-func (exec *executer) getDataForClassExpr(node treeindex.Noder, operand aqlprocessor.ClassExpression) ([]dataCell, error) {
+func (exec *Executer) getDataForClassExpr(node treeindex.Noder, operand *aqlprocessor.ClassExpression) ([]dataCell, error) {
 	var (
 		result []dataCell
 		err    error
@@ -124,7 +124,7 @@ func (exec *executer) getDataForClassExpr(node treeindex.Noder, operand aqlproce
 	if node == nil {
 		result, err = exec.getDataForClassExpression(operand)
 	} else {
-		result, err = exec.getDataForClassExpressionnFromNode(node, operand)
+		result, err = exec.getDataForClassExpressionFromNode(node, operand)
 	}
 
 	if err != nil {
@@ -134,12 +134,12 @@ func (exec *executer) getDataForClassExpr(node treeindex.Noder, operand aqlproce
 	return result, nil
 }
 
-func (exec *executer) getDataForClassExpression(operand aqlprocessor.ClassExpression) ([]dataCell, error) {
+func (exec *Executer) getDataForClassExpression(operand *aqlprocessor.ClassExpression) ([]dataCell, error) {
 	cells := []dataCell{}
 
 	switch name := operand.Identifiers[0]; name {
 	case "EHR":
-		ehrs, err := exec.index.GetEHRs("")
+		ehrs, err := exec.Index.GetEHRs("")
 		if err != nil {
 			return nil, errors.Wrap(err, "cannot get data source for EHRs")
 		}
@@ -172,7 +172,7 @@ func (exec *executer) getDataForClassExpression(operand aqlprocessor.ClassExpres
 	return cells, nil
 }
 
-func (exec *executer) getDataForClassExpressionnFromNode(node treeindex.Noder, from aqlprocessor.ClassExpression) ([]dataCell, error) {
+func (exec *Executer) getDataForClassExpressionFromNode(node treeindex.Noder, from *aqlprocessor.ClassExpression) ([]dataCell, error) {
 	result := []dataCell{}
 
 	name := from.Identifiers[0]
@@ -222,7 +222,7 @@ func (exec *executer) getDataForClassExpressionnFromNode(node treeindex.Noder, f
 	return result, nil
 }
 
-func (exec *executer) checkNodeByPathPredicate(node treeindex.Noder, pathPredicate *aqlprocessor.PathPredicate) (bool, error) {
+func (exec *Executer) checkNodeByPathPredicate(node treeindex.Noder, pathPredicate *aqlprocessor.PathPredicate) (bool, error) {
 	if pathPredicate == nil {
 		return true, nil
 	}
@@ -240,7 +240,7 @@ func (exec *executer) checkNodeByPathPredicate(node treeindex.Noder, pathPredica
 	return false, errors.New("not implemented")
 }
 
-func (exec *executer) checkNodeByStandartPathPredicate(node treeindex.Noder, predicate *aqlprocessor.StandartPredicate) (bool, error) {
+func (exec *Executer) checkNodeByStandartPathPredicate(node treeindex.Noder, predicate *aqlprocessor.StandartPredicate) (bool, error) {
 	val, ok := getValueForPath(predicate.ObjectPath, node)
 	if !ok {
 		return false, nil
@@ -248,15 +248,15 @@ func (exec *executer) checkNodeByStandartPathPredicate(node treeindex.Noder, pre
 
 	if predicate.Operand != nil {
 		if param := predicate.Operand.Parameter; param != nil {
-			paramVal, ok := exec.params[string(*param)]
+			paramVal, ok := exec.Params[string(*param)]
 			if !ok {
 				return false, nil
 			}
 
-			if reflect.TypeOf(paramVal) == reflect.TypeOf(val) {
+			if reflect.TypeOf(paramVal) == reflect.TypeOf(val.Data) {
 				switch pv := paramVal.(type) {
 				case string:
-					return pv == val.(string), nil
+					return pv == val.Data.(string), nil
 				default:
 					return false, fmt.Errorf("unexpected type: %T", paramVal) //nolint
 				}
@@ -269,12 +269,12 @@ func (exec *executer) checkNodeByStandartPathPredicate(node treeindex.Noder, pre
 	return false, errors.New("unexpected standart predicate state")
 }
 
-func (exec *executer) checkNodeByArchetypePredicate(node treeindex.Noder, predicate *aqlprocessor.ArchetypePathPredicate) (bool, error) {
+func (exec *Executer) checkNodeByArchetypePredicate(node treeindex.Noder, predicate *aqlprocessor.ArchetypePathPredicate) (bool, error) {
 	targetArchetypeID := ""
 	if predicate.ArchetypeHRID != nil {
 		targetArchetypeID = *predicate.ArchetypeHRID
 	} else if predicate.Parameter != nil {
-		paramVal, ok := exec.params[string(*predicate.Parameter)]
+		paramVal, ok := exec.Params[string(*predicate.Parameter)]
 		if !ok {
 			return false, nil
 		}
