@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -34,31 +35,31 @@ func (m *MockPatientsRepository) EXPECT() *MockPatientsRepositoryMockRecorder {
 }
 
 // StatDocumentsCountGet mocks base method.
-func (m *MockPatientsRepository) StatDocumentsCountGet(start, end int64) (uint64, error) {
+func (m *MockPatientsRepository) StatDocumentsCountGet(ctx context.Context, start, end int64) (uint64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StatDocumentsCountGet", start, end)
+	ret := m.ctrl.Call(m, "StatDocumentsCountGet", ctx, start, end)
 	ret0, _ := ret[0].(uint64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // StatDocumentsCountGet indicates an expected call of StatDocumentsCountGet.
-func (mr *MockPatientsRepositoryMockRecorder) StatDocumentsCountGet(start, end interface{}) *gomock.Call {
+func (mr *MockPatientsRepositoryMockRecorder) StatDocumentsCountGet(ctx, start, end interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StatDocumentsCountGet", reflect.TypeOf((*MockPatientsRepository)(nil).StatDocumentsCountGet), start, end)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StatDocumentsCountGet", reflect.TypeOf((*MockPatientsRepository)(nil).StatDocumentsCountGet), ctx, start, end)
 }
 
 // StatPatientsCountGet mocks base method.
-func (m *MockPatientsRepository) StatPatientsCountGet(start, end int64) (uint64, error) {
+func (m *MockPatientsRepository) StatPatientsCountGet(ctx context.Context, start, end int64) (uint64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StatPatientsCountGet", start, end)
+	ret := m.ctrl.Call(m, "StatPatientsCountGet", ctx, start, end)
 	ret0, _ := ret[0].(uint64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // StatPatientsCountGet indicates an expected call of StatPatientsCountGet.
-func (mr *MockPatientsRepositoryMockRecorder) StatPatientsCountGet(start, end interface{}) *gomock.Call {
+func (mr *MockPatientsRepositoryMockRecorder) StatPatientsCountGet(ctx, start, end interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StatPatientsCountGet", reflect.TypeOf((*MockPatientsRepository)(nil).StatPatientsCountGet), start, end)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StatPatientsCountGet", reflect.TypeOf((*MockPatientsRepository)(nil).StatPatientsCountGet), ctx, start, end)
 }

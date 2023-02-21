@@ -1,6 +1,7 @@
 package stat
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -11,6 +12,8 @@ import (
 //go:generate mockgen -package mocks -source ./stat.go -destination ./mocks/stat_mock.go
 
 func TestCheckCounting(t *testing.T) {
+	ctx := context.Background()
+
 	tests := []struct {
 		name     string
 		period   string
@@ -22,7 +25,7 @@ func TestCheckCounting(t *testing.T) {
 			"1. expected 0 for old period",
 			"202001",
 			func(repo *mocks.MockPatientsRepository) {
-				repo.EXPECT().StatPatientsCountGet(int64(32503662000), int64(32503662000)).Return(uint64(0), nil)
+				repo.EXPECT().StatPatientsCountGet(ctx, int64(32503662000), int64(32503662000)).Return(uint64(0), nil)
 			},
 			0,
 			false,
@@ -31,7 +34,7 @@ func TestCheckCounting(t *testing.T) {
 			"2. expected 31 for empty period",
 			"",
 			func(repo *mocks.MockPatientsRepository) {
-				repo.EXPECT().StatPatientsCountGet(int64(0), int64(32503662000)).Return(uint64(31), nil)
+				repo.EXPECT().StatPatientsCountGet(ctx, int64(0), int64(32503662000)).Return(uint64(31), nil)
 			},
 			31,
 			false,
@@ -40,7 +43,7 @@ func TestCheckCounting(t *testing.T) {
 			"3. expected 31 for correct period",
 			"202201",
 			func(repo *mocks.MockPatientsRepository) {
-				repo.EXPECT().StatPatientsCountGet(int64(1640995200), int64(1643673600)).Return(uint64(31), nil)
+				repo.EXPECT().StatPatientsCountGet(ctx, int64(1640995200), int64(1643673600)).Return(uint64(31), nil)
 			},
 			31,
 			false,
@@ -49,7 +52,7 @@ func TestCheckCounting(t *testing.T) {
 			"4. expected 0 for period in future",
 			"202301",
 			func(repo *mocks.MockPatientsRepository) {
-				repo.EXPECT().StatPatientsCountGet(int64(1672531200), int64(1675209600)).Return(uint64(0), nil)
+				repo.EXPECT().StatPatientsCountGet(ctx, int64(1672531200), int64(1675209600)).Return(uint64(0), nil)
 			},
 			0,
 			false,
@@ -58,7 +61,7 @@ func TestCheckCounting(t *testing.T) {
 			"5. error on get data",
 			"202301",
 			func(repo *mocks.MockPatientsRepository) {
-				repo.EXPECT().StatPatientsCountGet(int64(1672531200), int64(1675209600)).Return(uint64(0), errors.New("some error"))
+				repo.EXPECT().StatPatientsCountGet(ctx, int64(1672531200), int64(1675209600)).Return(uint64(0), errors.New("some error"))
 			},
 			0,
 			true,
@@ -74,7 +77,7 @@ func TestCheckCounting(t *testing.T) {
 			tt.prepare(repoMock)
 
 			service := NewService(repoMock)
-			count, err := service.GetPatientsCount(tt.period)
+			count, err := service.GetPatientsCount(ctx, tt.period)
 			if (err != nil) != tt.wantErr {
 				t.Fatal(err)
 			}

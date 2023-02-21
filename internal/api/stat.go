@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,8 +12,8 @@ import (
 )
 
 type Service interface {
-	GetPatientsCount(period string) (uint64, error)
-	GetDocumentsCount(period string) (uint64, error)
+	GetPatientsCount(ctx context.Context, period string) (uint64, error)
+	GetDocumentsCount(ctx context.Context, period string) (uint64, error)
 }
 
 type StatHandler struct {
@@ -54,14 +55,14 @@ type ResponseTotal struct {
 func (h *StatHandler) GetStat(c *gin.Context) {
 	period := c.Param("period")
 
-	patientsCount, err := h.service.GetPatientsCount(period)
+	patientsCount, err := h.service.GetPatientsCount(c.Request.Context(), period)
 	if err != nil {
 		log.Printf("service.GetPatientsCount error: %v period: %s", err, period)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	documentsCount, err := h.service.GetDocumentsCount(period)
+	documentsCount, err := h.service.GetDocumentsCount(c.Request.Context(), period)
 	if err != nil {
 		log.Printf("service.GetPatientsCount error: %v period: %s", err, period)
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -93,28 +94,28 @@ func (h *StatHandler) GetStat(c *gin.Context) {
 func (h *StatHandler) GetTotal(c *gin.Context) {
 	currMonth := fmt.Sprintf("%d%02d", time.Now().Year(), time.Now().Month())
 
-	patientsCurrMonth, err := h.service.GetPatientsCount(currMonth)
+	patientsCurrMonth, err := h.service.GetPatientsCount(c.Request.Context(), currMonth)
 	if err != nil {
 		log.Printf("service.GetPatientsCount error: %v period: %s", err, currMonth)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	documentsCurrMonth, err := h.service.GetDocumentsCount(currMonth)
+	documentsCurrMonth, err := h.service.GetDocumentsCount(c.Request.Context(), currMonth)
 	if err != nil {
 		log.Printf("service.GetPatientsCount error: %v period: %s", err, currMonth)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	patientsTotal, err := h.service.GetPatientsCount("")
+	patientsTotal, err := h.service.GetPatientsCount(c.Request.Context(), "")
 	if err != nil {
 		log.Printf("service.GetPatientsCount error: %v period: %s", err, currMonth)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	documentsTotal, err := h.service.GetDocumentsCount("")
+	documentsTotal, err := h.service.GetDocumentsCount(c.Request.Context(), "")
 	if err != nil {
 		log.Printf("service.GetPatientsCount error: %v period: %s", err, currMonth)
 		c.AbortWithStatus(http.StatusInternalServerError)

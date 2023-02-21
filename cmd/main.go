@@ -51,6 +51,7 @@ func main() {
 
 	syncer.New(
 		infra.StatsRepo,
+		infra.ChunkRepo,
 		infra.EthClient,
 		syncer.Config(cfg.Sync),
 	).Start(ctx)
