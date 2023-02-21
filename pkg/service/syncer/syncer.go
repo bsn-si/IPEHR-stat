@@ -382,14 +382,14 @@ func (s *Syncer) procDataUpdate(ctx context.Context, method *abi.Method, inputDa
 	if err := s.chunkRepo.AddNewIndexObject(ctx, idxChunk); err != nil {
 		return errors.Wrap(err, "cannot save index chunk into sotrage")
 	}
-  
-  return s.unmarshalDataAndStoreInIndex(ehrID, data)
+
+	return s.unmarshalDataAndStoreInIndex(ehrID, data)
 }
 
 func (s *Syncer) unmarshalDataAndStoreInIndex(ehrID string, data []byte) error {
 	var nodeObj treeindex.ObjectNode
 
-  err = msgpack.Unmarshal(data, &nodeObj)
+	err := msgpack.Unmarshal(data, &nodeObj)
 	if err != nil {
 		return fmt.Errorf("msgpack.Unmarshal error: %w", err)
 	}
