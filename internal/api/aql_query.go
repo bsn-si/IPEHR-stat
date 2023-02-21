@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"io"
 	"log"
 	"net/http"
 
@@ -25,21 +26,23 @@ func newAQLQueryAPI(querier AQLQuerier) *aqlQueryAPI {
 }
 
 func (api *aqlQueryAPI) QueryHandler(c *gin.Context) {
-	req := model.QueryRequest{
-		QueryParameters: map[string]interface{}{},
-	}
+	var q model.QueryRequest
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
-		return
-	}
-
-	if !req.Validate() {
+	data, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		log.Println("Request body read error: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "request validation error"})
 		return
 	}
 
-	resp, err := api.querier.ExecQuery(c.Request.Context(), &req)
+	err = q.FromBytes(data)
+	if err != nil {
+		log.Println("QueryRequest FromBytes error: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "request validation error"})
+		return
+	}
+
+	resp, err := api.querier.ExecQuery(c.Request.Context(), &q)
 	if err != nil {
 		log.Printf("cannot exec query: %v", err)
 
@@ -52,5 +55,11 @@ func (api *aqlQueryAPI) QueryHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, resp)
+	respData, err := resp.Bytes()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "response serialization error"})
+		return
+	}
+
+	c.Data(http.StatusOK, "application/octet-stream", respData)
 }
