@@ -77,12 +77,7 @@ func getDataSourceForIdentifierExpr(ie *aqlprocessor.IdentifiedExpr, rows dataRo
 					continue
 				}
 
-				var err error
-
-				containsValues, err = compare(ie.Terminal, value.Data, *ie.ComparisonOperator)
-				if err != nil {
-					return nil, fmt.Errorf("compare error: %w", err)
-				}
+				containsValues = compare(ie.Terminal, value, *ie.ComparisonOperator)
 			}
 
 			if containsValues {
@@ -153,12 +148,12 @@ func mergeDataSourcesOR(left, right dataRows) dataRows {
 	return result
 }
 
-func compare(term *aqlprocessor.Terminal, val any, cmpOperator aqlprocessor.ComparisionSymbol) (bool, error) {
+func compare(term *aqlprocessor.Terminal, val any, cmpOperator aqlprocessor.ComparisionSymbol) bool {
 	if term.Primitive != nil {
 		return term.Primitive.Compare(val, cmpOperator)
 	}
 
 	//TODO: add logic for other conditions
 
-	return false, nil
+	return false
 }

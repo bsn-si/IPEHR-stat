@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 
+	"github.com/bsn-si/IPEHR-gateway/src/pkg/aqlprocessor"
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/errors"
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/storage/treeindex"
 )
@@ -32,8 +33,14 @@ func (conn *AQLConn) Prepare(query string) (driver.Stmt, error) {
 	return conn.PrepareContext(context.Background(), query)
 }
 
-func (conn *AQLConn) PrepareContext(_ context.Context, _ string) (driver.Stmt, error) {
+func (conn *AQLConn) PrepareContext(_ context.Context, query string) (driver.Stmt, error) {
+	aqlQuery, err := aqlprocessor.NewAqlProcessor(query).Process()
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot prepare AQL query")
+	}
+
 	stmt := &Stmt{
+		query: aqlQuery,
 		index: conn.index,
 	}
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	_ "github.com/bsn-si/IPEHR-stat/internal/aqlquerier" //nolint
+	_ "github.com/bsn-si/IPEHR-gateway/src/pkg/aqlquerier" //nolint
 	"github.com/bsn-si/IPEHR-stat/internal/repository"
 	"github.com/bsn-si/IPEHR-stat/pkg/config"
 	"github.com/bsn-si/IPEHR-stat/pkg/service/stat"
