@@ -389,29 +389,26 @@ func (s *Syncer) procDataUpdate(ctx context.Context, method *abi.Method, inputDa
 func (s *Syncer) unmarshalDataAndStoreInIndex(ehrID string, data []byte) error {
 	var nodeObj treeindex.ObjectNode
 
-	err := msgpack.Unmarshal(data, &nodeObj)
-	if err != nil {
-		return fmt.Errorf("msgpack.Unmarshal error: %w", err)
+	if err := msgpack.Unmarshal(data, &nodeObj); err != nil {
+		return fmt.Errorf("data unmarshal error: %w", err)
 	}
 
 	switch nodeObj.GetNodeType() {
-	case treeindex.NodeTypeEHR:
+	case treeindex.EHRNodeType:
 		var ehrNode treeindex.EHRNode
 
-		err = msgpack.Unmarshal(data, &ehrNode)
-		if err != nil {
-			return fmt.Errorf("ehrNode Unmarshal error: %w", err)
+		if err := msgpack.Unmarshal(data, &ehrNode); err != nil {
+			return fmt.Errorf("ehrNode unmarshal error: %w", err)
 		}
 
 		if err := treeindex.DefaultEHRIndex.AddEHRNode(&ehrNode); err != nil {
 			return fmt.Errorf("AddEHRNode error: %w", err)
 		}
-	case treeindex.NodeTypeCompostion:
+	case treeindex.CompostionNodeType:
 		var cmpNode treeindex.CompositionNode
 
-		err = msgpack.Unmarshal(data, &cmpNode)
-		if err != nil {
-			return fmt.Errorf("cmpNode Unmarshal error: %w", err)
+		if err := msgpack.Unmarshal(data, &cmpNode); err != nil {
+			return fmt.Errorf("cmpNode unmarshal error: %w", err)
 		}
 
 		ehrNodes, err := treeindex.DefaultEHRIndex.GetEHRs(ehrID)

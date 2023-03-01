@@ -8,7 +8,7 @@ import (
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/errors"
 )
 
-func (exec *Executer) queryData(sources dataRows) (*Rows, error) {
+func (exec *executer) queryData(sources dataRows) (*Rows, error) {
 	if len(sources) == 0 {
 		return &Rows{}, nil
 	}
@@ -25,14 +25,14 @@ func (exec *Executer) queryData(sources dataRows) (*Rows, error) {
 			values: []interface{}{},
 		}
 
-		for _, selectExpr := range exec.Query.Select.SelectExprs {
+		for _, selectExpr := range exec.query.Select.SelectExprs {
 			switch slct := selectExpr.Value.(type) {
 			case *aqlprocessor.IdentifiedPathSelectValue:
 				{
 					var val any
 					ip := slct.Val
 
-					indexNode, ok := dataRow.cells[ip.Identifier]
+					indexNode, ok := dataRow.cells[slct.Val.Identifier]
 					if ok {
 						if ip.ObjectPath != nil {
 							val, _ = getValueForPath(ip.ObjectPath, indexNode.data)
@@ -57,7 +57,7 @@ func (exec *Executer) queryData(sources dataRows) (*Rows, error) {
 					return nil, errors.New("Function call not implemented")
 				}
 			default:
-				return nil, errors.Errorf("Unexpected SelectExpr type: %T", slct)
+				return nil, errors.New("Unexpected SelectExpr type")
 			}
 		}
 
@@ -67,7 +67,7 @@ func (exec *Executer) queryData(sources dataRows) (*Rows, error) {
 	return exec.fillColumns(result), nil
 }
 
-func (exec *Executer) getPrimitiveColumnValue(prim *aqlprocessor.PrimitiveSelectValue) driver.Value {
+func (exec *executer) getPrimitiveColumnValue(prim *aqlprocessor.PrimitiveSelectValue) driver.Value {
 	if prim == nil {
 		return nil
 	}
@@ -75,8 +75,8 @@ func (exec *Executer) getPrimitiveColumnValue(prim *aqlprocessor.PrimitiveSelect
 	return prim.Val.Val
 }
 
-func (exec *Executer) fillColumns(rows *Rows) *Rows {
-	for i, se := range exec.Query.Select.SelectExprs {
+func (exec *executer) fillColumns(rows *Rows) *Rows {
+	for i, se := range exec.query.Select.SelectExprs {
 		c := Column{
 			Path: se.Path,
 			Name: se.AliasName,

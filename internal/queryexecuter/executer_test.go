@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bsn-si/IPEHR-gateway/src/pkg/aqlprocessor"
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/errors"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -103,12 +102,7 @@ func TestNewQueryExecuterService(t *testing.T) {
 			svc := NewQueryExecuterService(sqlxDB)
 			defer svc.Close()
 
-			query, err := aqlprocessor.NewAqlProcessor(tt.args.query).Process()
-			if err != nil {
-				t.Errorf("aql query process error: %v", err)
-			}
-
-			gotCol, gotRows, err := svc.runQuery(tt.args.ctx, query, tt.args.params)
+			gotCol, gotRows, err := svc.runQuery(tt.args.ctx, tt.args.query, tt.args.offset, tt.args.limit, tt.args.params)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("want error %v, got %v", tt.wantErr, err)
 			}

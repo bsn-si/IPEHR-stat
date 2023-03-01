@@ -1,19 +1,21 @@
 package aqlquerier
 
 import (
+	"database/sql/driver"
+
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/aqlprocessor"
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/errors"
 	"github.com/bsn-si/IPEHR-gateway/src/pkg/storage/treeindex"
 )
 
-type Executer struct {
-	Query  *aqlprocessor.Query
-	Params map[string]any
+type executer struct {
+	query  *aqlprocessor.Query
+	params map[string]driver.Value
 
-	Index *treeindex.EHRIndex
+	index *treeindex.EHRIndex
 }
 
-func (exec *Executer) Run() (*Rows, error) {
+func (exec *executer) run() (*Rows, error) {
 	// handle FROM block
 	dataSources, err := exec.findSources()
 	if err != nil {
@@ -40,27 +42,27 @@ func (exec *Executer) Run() (*Rows, error) {
 	return exec.limitRows(rows), nil
 }
 
-func (exec *Executer) filterSources(rows dataRows) (dataRows, error) {
-	if exec.Query.Where == nil {
+func (exec *executer) filterSources(rows dataRows) (dataRows, error) {
+	if exec.query.Where == nil {
 		return rows, nil
 	}
 
-	return processWhere(exec.Query.Where, rows)
+	return processWhere(exec.query.Where, rows)
 }
 
-func (exec *Executer) orderRows(rows *Rows) (*Rows, error) {
+func (exec *executer) orderRows(rows *Rows) (*Rows, error) {
 	// handle ORDER block
 	//TODO: add order logic
 	return rows, nil
 }
 
-func (exec *Executer) limitRows(rows *Rows) *Rows {
-	if exec.Query.Limit == nil {
+func (exec *executer) limitRows(rows *Rows) *Rows {
+	if exec.query.Limit == nil {
 		return rows
 	}
 
-	limit := exec.Query.Limit.Limit
-	offset := exec.Query.Limit.Offset
+	limit := exec.query.Limit.Limit
+	offset := exec.query.Limit.Offset
 
 	if offset >= 0 {
 		if offset > len(rows.rows) {
@@ -77,7 +79,7 @@ func (exec *Executer) limitRows(rows *Rows) *Rows {
 	return rows
 }
 
-func getValueForPath(path *aqlprocessor.ObjectPath, node treeindex.Noder) (*treeindex.ValueNode, bool) {
+func getValueForPath(path *aqlprocessor.ObjectPath, node treeindex.Noder) (any, bool) {
 	index := 0
 	queue := []treeindex.Noder{node}
 
@@ -100,13 +102,13 @@ func getValueForPath(path *aqlprocessor.ObjectPath, node treeindex.Noder) (*tree
 				}
 
 				switch nextNode.GetNodeType() {
-				case treeindex.NodeTypeObject:
+				case treeindex.ObjectNodeType:
 					if path.PathPredicate != nil && path.PathPredicate.Type == aqlprocessor.NodePathPredicate {
 						if np := path.PathPredicate.NodePredicate; np.AtCode != nil && nextNode.GetID() == np.AtCode.ToString() {
 							index++
 						}
 					}
-				case treeindex.NodeTypeDataValue:
+				case treeindex.DataValueNodeType:
 					index++
 				}
 
@@ -129,7 +131,7 @@ func getValueForPath(path *aqlprocessor.ObjectPath, node treeindex.Noder) (*tree
 				queue = append(queue, valueNode)
 			}
 		case *treeindex.ValueNode:
-			return node, true
+			return node.GetData(), true
 		}
 	}
 
